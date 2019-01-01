@@ -1,4 +1,6 @@
- # Search and Destroy v2.0 (rel-1.0.9) — 24 Dec 2018
+# Search and Destroy v3.0 (rel-1.0.0) — 31 Dec 2018
+
+# Search and Destroy v2.0 (rel-1.0.9) — 24 Dec 2018
  - S&D now supports gquest and as of 30 Dec it finally works.  All you have to do is join a gq, wait for it to start, and then type 'gq info' to load target data and detect if it's an area or room gq.  From there it handles like a cp.  You can be on a gq and cp at the same time - 'cp check' and 'gq check' will change between cp and gq mob lists.  Xcp, go, and so on are used for both.  The implementation is a new design and isn't based on prior gq S&D or other scripts.
 
 If there are any problems, email them to me.  
