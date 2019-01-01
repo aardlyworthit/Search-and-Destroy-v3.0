@@ -1,9 +1,9 @@
-# Search and Destroy v3.0 (rel-1.0.0) — 31 Dec 2018
+# Search and Destroy v3.0 (rel-1.0.0) — 1 Jan 2019
 As a result of Lasher and the Immortals commandeering S&D version 2 and hosting it as their own, I am releasing a new, third version to make clear the distinction between my continuing work versus what they stole.  The Aardwolf community cannot and must not allow either thieves or their abuse of authority to deter continued development of something that provably increases player enjoyment and therefore retention.  While Lasher and the immortals place a higher priority on maintaining control, the rest of us need to focus on what matters — strengthening the community by delivering results.
 
 Search and Destroy version 3 is, and always will be, superior to what the immortals host as their own — I promise you that.  In the unlikely event they make any changes to "theirs" at all, any changes I find worthwhile will be assimilated here.  If you want the best, this is it.
 
-Welcome to version 3.
+Happy 2019.  Welcome to version 3.
 
 # Search and Destroy v2.0 (rel-1.0.9) — 24 Dec 2018
  - S&D now supports gquest and as of 30 Dec it finally works.  All you have to do is join a gq, wait for it to start, and then type 'gq info' to load target data and detect if it's an area or room gq.  From there it handles like a cp.  You can be on a gq and cp at the same time - 'cp check' and 'gq check' will change between cp and gq mob lists.  Xcp, go, and so on are used for both.  The implementation is a new design and isn't based on prior gq S&D or other scripts.
