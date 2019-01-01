@@ -1,5 +1,7 @@
 # Search and Destroy v3.0 (rel-1.0.0) — 31 Dec 2018
-As a result of Lasher and the Immortals commandeering S&D version 2 and hosting it as their own, I am releasing a new, third version to make clear the distinction between what they stole.  I will allow neither thieves nor abuse of authority will deter continued development of something that provably increases player enjoyment and therefore retention.  I'm not doing it to "get back at" the imms — they and their feelings are irrelevant.  I serve the Aardwolf community, and no other.
+As a result of Lasher and the Immortals commandeering S&D version 2 and hosting it as their own, I am releasing a new, third version to make clear the distinction between what they stole.  I will allow neither thieves nor abuse of authority to deter continued development of something that provably increases player enjoyment and therefore retention.  I'm not doing it to "get back at" the imms — they and their feelings are irrelevant.  I serve the Aardwolf community, and no other.
+
+This version is, and always will be, superior to what the immortals host as their own — I promise you that.  In the unlikely event they make any changes to it at all, any changes I find worthwhile will be assimilated here.  If you want the best, this is it.
 
 Welcome to version 3.
 
