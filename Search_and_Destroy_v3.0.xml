@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?><!DOCTYPE muclient>
 <!-- Saved on Saturday, July 05, 2008, 4:46 PM -->
 <muclient>
-<plugin name="Search_and_Destroy_v2" version="2.0" id="20000000CEDD84F510B74715" date_written="2018-07-20 01:00:00" author="Starling" language="Lua" purpose="rock the casbah" save_state="y" requires="5.06" >
+<plugin name="Search_and_Destroy_v3" version="3.0" id="30000000537461726C696E67" date_written="2018-12-31 23:00:00" author="Starling" language="Lua" purpose="Rock the casbah !!" save_state="y" requires="5.06" >
 <description trim="n">
 <![CDATA[
 	--[[ Search and Destroy version history:
@@ -41,7 +41,7 @@
 	require "serialize"
 	require "tprint"
 	require "wait"
-	local current_sd_version = "Search & Destroy v2.0 (rel-1.0.10)"
+	local current_sd_version = "Search & Destroy v3.0 (rel-1.0.0)"
 	local plugin_id_gmcp_handler = "3e7dedbe37e44942dd46d264"		-- easier to remember the var names than the plugin id's
 	local plugin_id_gmcp_mapper = "b6eae87ccedd84f510b74714"
 	local plugin_id_z_order = "462b665ecb569efbf261422f"
@@ -66,7 +66,7 @@
 	
 -- [[ campaign data ]]
 	local cp_info_level = tonumber(GetVariable("mcvar_cp_level")) or 0
-	local cp_info_type = "init"
+	local cp_gq_info_type = "init"
 	local cp_info_list = {}
 	local cp_check_list = {}
 	local last_cp_check = os.clock()
@@ -80,7 +80,7 @@
 	local current_gq_id = GetVariable("mcvar_current_gq_id") or ""
 	local gq_info_minlvl = tonumber(GetVariable("mcvar_gq_info_minlvl")) or 1
 	local gq_info_maxlvl = tonumber(GetVariable("mcvar_gq_info_maxlvl")) or 300
-	local gq_info_status =  GetVariable("mcvar_gq_info_status") or "none"
+	local gq_info_status = GetVariable("mcvar_gq_info_status") or "none"
 	local gq_info_type = "none"
 	local gq_info_list = {}
 	local gq_check_list = {}
@@ -142,7 +142,7 @@
 	local win_active_tab = "cp"	-- valid tabs are q, cp, gq, settings, x
 	local win_pos_x = tonumber(GetVariable("mcvar_window_pos_x")) or 0			-- window position x,y coordinates
 	local win_pos_y = tonumber(GetVariable("mcvar_window_pos_y")) or 0
-	local win_width = tonumber(GetVariable("mcvar_window_width")) or 325			
+	local win_width = tonumber(GetVariable("mcvar_window_width")) or 325
 	local win_width_min = 325
 	local win_width_max = tonumber(GetVariable("mcvar_window_width_max")) or win_width_min
 	local win_height = tonumber(GetVariable("mcvar_window_height")) or 280
@@ -1037,7 +1037,7 @@
 
 	function player_not_on_cp()
 		EnableTriggerGroup ("trg_campaign", false)
-		cp_info_type = "none"
+		cp_gq_info_type = "none"
 		cp_info_level = "0"
 		cp_info_list = {}
 		main_target_list = {}
@@ -1094,15 +1094,15 @@
 	
 	function cp_info_end()
 		local t = cp_info_list
-		local ct = cp_info_type_check(t)
+		local ct = cp_gq_info_type_check(t)
 		print("cp type detection: "..ct.." (level "..cp_info_level..")\n")
-		cp_info_type = ct
+		cp_gq_info_type = ct
 		SetVariable("mcvar_cp_info_type", ct)
 		xg_draw_window()
 		DoAfterSpecial(0.1, "do_cp_check()", sendto.script)
 	end
 	
-	function cp_info_type_check(list)
+	function cp_gq_info_type_check(list)
 		local t = list
 		local areaCount = 0
 		local roomCount = 0
@@ -1158,7 +1158,7 @@
 	
 	function cp_check_end(name, line, wildcards)
 		win_circle_readout = "cp"
-		build_cp_target_list()
+		build_main_target_list("cp")
 		if (xcp_retry_stat == 2) then
 			if (xcp_index == 0) or (xcp_index == 1) then
 				xcp_retry_stat = 0
@@ -1170,30 +1170,202 @@
 		end
 		xcp_retry_stat = 0
 	end
+
 	
---	[[ Build cp target list process path ]]
-	function build_cp_target_list()
-		local list = cp_check_list
-		local sqla = " SELECT uid as arid, name as areaName " .. "FROM areas " .. "WHERE name = %s " .. "ORDER BY arid ASC "
-		local sqlr = " SELECT r.uid as roomid, r.name as roomName, a.uid as arid, a.name as areaName, 'room' as type " .. "FROM rooms r " .. "INNER JOIN areas a ON r.area = a.uid " .. "WHERE r.name = %s " .. "ORDER BY arid ASC "
-		local t = {}
-		local ct = cp_info_type
-		if ct == "area" then	-- branch for area cp
-			t = build_area_targets(list, sqla)	
-		elseif ct == "room" then	-- branch for room cp
-			t = build_room_targets(list, sqlr, sqla)
-		elseif ct == "none" then	-- should never be called but who knows
-			print("cp target builder error - attempt to run while not on campaign")
+--	[[ Gquest operations]]	
+	function do_gq_info()
+		gq_info_list = {}
+		main_target_list = {}
+		xcp_index = 0
+		currentRoom = gmcp("room.info")
+		EnableTrigger("trg_gq_info_quest_name", true)
+		Send("gq info " .. current_gq_id)
+		xg_draw_window()
+	end
+
+	function gq_info_quest_name(name, line, wildcards)
+		local id = wildcards.gq_id
+		if (id == current_gq_id) then
+			--EnableTrigger("trg_gq_info_level_range", true)
+			EnableTrigger("trg_gq_info_quest_status", true)
+			EnableTrigger("trg_gq_info_targets", true)
+			player_on_gq = "yes"	-- if plugin somehow gets reset, if the id in gq info matches what you just joined, you're probably still in that gq
+		else
+			print("gq info quest name fail")
+			--EnableTrigger("trg_gq_info_level_range", false)
+			EnableTrigger("trg_gq_info_quest_status", false)
+			EnableTrigger("trg_gq_info_targets", false)
+		end
+	end
+	
+	function gq_info_quest_status(name, line, wildcards)
+		local st = wildcards.status
+		if st == "Preparing" then
+			EnableTrigger("trg_gq_info_targets", false)
+		end
+		gq_info_status = st
+		EnableTrigger("trg_gq_info_status", false)
+	end
+	
+	function gq_info_level_range(name, line, wildcards)
+		--local min = tonumber(wildcards.minlvl)
+		--local max = tonumber(wildcards.maxlvl)
+		--gq_info_minlvl = min
+		--gq_info_maxlvl = max
+		--EnableTrigger("trg_gq_info_level_range", false)
+	end
+	
+	function gq_info_line(name, line, wildcards)
+		local t = gq_info_list
+		local mob = wildcards.mob
+		local qty = wildcards.qty
+		local loc = wildcards.loc
+		local ord = #t+1
+		table.insert(t, { mob=mob, qty=qty, loc=loc, ord=ord } )
+	end
+	
+	function gq_info_end()
+		player_on_gq = "yes"	-- more redundancy.  gq's are a pain
+		local t = gq_info_list
+		--tprint(t)
+		local gq_type = cp_gq_info_type_check(t)
+		print("gq type detection: "..gq_type.."\n")
+		cp_gq_info_type = gq_type
+		SetVariable("mcvar_gq_info_type", gq_type)
+		xg_draw_window()
+		DoAfterSpecial(0.1, "do_gq_check()", sendto.script)
+	end
+	
+	function do_gq_check()
+		local time_check = os.clock()					-- prevent double cp checks from different plugins
+		if ((time_check - last_cp_check) < 1.0) then
 			return
 		end
-		--for i,v in ipairs (t) do
-		--	v.kw = gmkw(v.mob, v.arid)
-		--end
+		last_gq_check = time_check
+		gq_check_list = {}
+		EnableTrigger("trg_gq_check_line", true)
+		Send("gq ch")
+	end
+	
+	function gq_check_line(name, line, wildcards)
+		local t = gq_check_list
+		local mob = wildcards.mob
+		local qty = wildcards.qty
+		local loc = wildcards.loc
+		local is_dead = (wildcards.isdead == "" and "no" or "yes")
+		local ord = #t+1
+		table.insert(t, { mob=mob, qty=qty, loc=loc, is_dead=is_dead, ord=ord })
+	end
+	
+	function gq_check_end()
+		player_on_gq = "yes"	-- if you can pull gq check, you must be in the gq.  Adds redundancy in case plugin/data get reset somehow.
+		win_circle_readout = "gq"
+		build_main_target_list("gq")
+		if (xcp_retry_stat == 2) then
+			if (xcp_index == 0) or (xcp_index == 1) then
+				xcp_retry_stat = 0
+				xcp_noarg()
+			else
+				xcp_retry_stat = 0
+				Execute("xcp " .. xcp_index)
+			end
+		end
+		xcp_retry_stat = 0
+	end
+
+	function gq_has_started(name, line, wildcards)
+		local id = wildcards.gq_id
+		if current_gq_id ~= id then
+			return
+		end
+		local min = wildcards.min_lvl
+		local max = wildcards.max_lvl
+		gq_info_minlvl = min
+		gq_info_maxlvl = max
+		gq_info_status = "Active"
+		SetVariable("mcvar_gq_info_minlvl", min)
+		SetVariable("mcvar_gq_info_maxlvl", max)
+		SetVariable("mcvar_gq_info_status", "Active")
+		if id == current_gq_id then
+			do_gq_info()
+		end
+		gq_started = "yes"
+	end
+	
+	function gq_mob_killed()
+		short_mob_name = -1
+		full_mob_name = -1
+		xcp_retry_stat = 1
+		xcp_index = 0
+		gotoIndex = 1
+		gotoList = {}
+		qw = {}
+		do_gq_check()
+	end
+	
+	function gq_join(name, line, wildcards)
+		current_gq_id = wildcards.gq_id
+		print(current_gq_id)
+		SetVariable("mcvar_current_gq_id", current_gq_id)
+		player_on_gq = "yes"
+	end
+	
+	function player_is_on_gq()
+		player_on_gq = "yes"
+		xg_refresh_window()
+	end
+
+	function player_not_on_gq()
+		EnableTriggerGroup ("trg_gq", false)
+		cp_gq_info_type = "none"
+			SetVariable("mcvar_gq_info_type", "none")
+		gq_info_minlvl = 1
+			SetVariable("mcvar_gq_info_minlvl", "1")
+		gq_info_maxlvl = 300
+			SetVariable("mcvar_gq_info_maxlvl", "300")
+		gq_info_status = "none"
+			SetVariable("mcvar_gq_info_status", "none")
+		current_gq_id = ""
+			SetVariable("mcvar_current_gq_id", "")
+		player_on_gq = "no"
+		gq_info_list = {}
+		gq_check_list = {}
+		xcp_index = 0
+		xg_draw_window()
+		if (player_on_cp == "yes") then
+			ColourNote("#FF5000", "#000000", "Reloading your cp targets....")
+			do_cp_info()
+		end
+	end
+	
+--	[[ Build main target list process path ]]
+	function build_main_target_list(cp_gq)
+		local list
+		if (cp_gq == "cp") then
+			list = cp_check_list
+		elseif (cp_gq == "gq") then
+			list = gq_check_list
+		else
+			print("main target list build error - function arg can only be 'cp' or 'gq'")
+			return
+		end
+		local sqla = " SELECT uid as arid, name as areaName " .. "FROM areas " .. "WHERE name = %s " .. "ORDER BY arid ASC "
+		local sqlr = " SELECT r.uid as roomid, r.name as roomName, a.uid as arid, a.name as areaName, 'room' as type " .. "FROM rooms r " .. "INNER JOIN areas a ON r.area = a.uid " .. "WHERE r.name = %s " .. "ORDER BY arid ASC "		
+		local cgt = cp_gq_info_type
+		local t = {}
+		if cgt == "area" then	-- branch for area cp
+			t = build_area_targets(list, sqla)	
+		elseif cgt == "room" then	-- branch for room cp
+			t = build_room_targets(list, sqlr, sqla)
+		elseif cgt == "none" then	-- should never be called but who knows
+			print("main target list build error - tried to run while not on " .. cp_gq)
+			return
+		end
 		main_target_list = copytable(t)
 		print_target_links()
 		xg_refresh_window()
 	end
-	
+
 	function build_area_targets(list, sqla)
 		local t = {}
 		local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
@@ -1351,7 +1523,7 @@
 -- [[ "xcp" command ]]
 	function xcp_noarg()	-- xcp with no argument given, so find the first available mob (alive, location known) and go to it.
 		local t = main_target_list
-		if (cp_info_type == "none") then	-- abort if not on cp
+		if (cp_gq_info_type == "none") then	-- abort if not on cp
 			ColourNote("#FF5000", "", "\nSearch and Destroy: 'xcp' aborted - you're not on a cp.\n")
 			return
 		elseif (#t == 0) then	-- abort if on a cp, but target list is empty
@@ -1377,7 +1549,7 @@
 	function xcp_arg(name, line, wildcards)
 		local index = tonumber(wildcards.index)
 		local cp_list = main_target_list
-		if (cp_info_type == "none") then	-- abort if not on cp
+		if (cp_gq_info_type == "none") then	-- abort if not on cp
 			ColourNote("#FF5000", "", "\nSearch and Destroy: 'xcp' aborted - you're not on a cp.\n")
 			return
 		elseif (#cp_list == 0) then	-- abort if on a cp, but target list is empty
@@ -2201,9 +2373,9 @@
 	local cp_simulate_toggle = "0"
 	function simulate_cp(name, line, wildcards)
 		if wildcards.type == "" then
-			cp_info_type = "area"
+			cp_gq_info_type = "area"
 		else
-			cp_info_type = wildcards.type
+			cp_gq_info_type = wildcards.type
 		end
 		local time_check = os.clock()					-- prevent double cp checks from different plugins
 		if ((time_check - last_cp_check) < 1.0) then
@@ -2418,7 +2590,18 @@
 		["noexp2"]	= { f="Consolas",			 s= 9, 				b=false, 	i=false, 	u=false },
 		["cplist_area"] = { f="Lucida Sans Unicode", s=win_font_size, 	b=false, 	i=false, 	u=false },
 		["cplist_room"] = { f="Segoe", 				 s=win_font_size, 	b=false, 	i=false, 	u=false } }
-		
+	
+	local b1 = { ["l"] = 48, ["t"] = 20, ["w"] = 30, ["h"] = 25 }	-- dimensions of action buttons
+	local button_1_list = {
+			[1] = { hsid = "hsXCP", L=  0+b1.l, T=b1.t, W=b1.w, H=b1.h, text = "xcp", tdx=3, tdy=3, exec1=     "xcp", exec2=   "xcp 0", tooltip = "Left click = get target\nRight click = clear target" },
+			[2] = { hsid = "hsGO",  L= 32+b1.l, T=b1.t, W=b1.w, H=b1.h, text =  "go", tdx=7, tdy=3, exec1=      "go", exec2=      "go", tooltip = "Go to room 1" },
+			[3] = { hsid = "hsKK",  L= 64+b1.l, T=b1.t, W=b1.w, H=b1.h, text =  "kk", tdx=8, tdy=3, exec1=      "kk", exec2=      "kk", tooltip = "Left click = 'kill' target mob\nRight click = kill with special" },			
+			[4] = { hsid = "hsNX",  L= 96+b1.l, T=b1.t, W=b1.w, H=b1.h, text =  "nx", tdx=7, tdy=3, exec1=      "nx", exec2=     "nx-", tooltip = "Left click = goto next\nRight click = goto prev" },
+			[5] = { hsid = "hsQS",  L=128+b1.l, T=b1.t, W=b1.w, H=b1.h, text =  "qs", tdx=8, tdy=3, exec1=      "qs", exec2=      "qs", tooltip = "Quick-scan for current target (cp, quest, ht, qw)" },
+			[6] = { hsid = "hsREF", L=240+b1.l, T=b1.t, W=b1.w, H=b1.h, text = "ref", tdx=6, tdy=3, exec1="xgui ref", exec2="xgui ref", tooltip = "Refresh target list (cp check)" },
+			[7] = { hsid = "hsHTA", L=270+b1.l, T=b1.t, W=b1.w, H=b1.h, text = "hta", tdx=5, tdy=3, exec1=     "hta", exec2=     "hta", tooltip = "Abort hunt-trick" },
+			[8] = { hsid = "hsCLR", L=300+b1.l, T=b1.t, W=b1.w, H=b1.h, text = "clr", tdx=6, tdy=3, exec1="xgui clr", exec2="xgui clr", tooltip = "Clear target list" }, }
+
 	function xg_create_window()
 		if (win_init == false) then
 			win_init = true
@@ -2438,18 +2621,7 @@
 			xg_draw_window()	
 		end
 	end
-	local b1 = { ["l"] = 48, ["t"] = 20, ["w"] = 30, ["h"] = 25 }	
-	local button_1_list = {
-			[1] = { hsid = "hsXCP", L=  0+b1.l, T=b1.t, W=b1.w, H=b1.h, text = "xcp", tdx=3, tdy=3, exec1=     "xcp", exec2=   "xcp 0", tooltip = "Left click = get target\nRight click = clear target" },
-			[2] = { hsid = "hsGO",  L= 32+b1.l, T=b1.t, W=b1.w, H=b1.h, text =  "go", tdx=7, tdy=3, exec1=      "go", exec2=      "go", tooltip = "Go to room 1" },
-			[3] = { hsid = "hsKK",  L= 64+b1.l, T=b1.t, W=b1.w, H=b1.h, text =  "kk", tdx=8, tdy=3, exec1=      "kk", exec2=      "kk", tooltip = "Left click = 'kill' target mob\nRight click = kill with special" },			
-			[4] = { hsid = "hsNX",  L= 96+b1.l, T=b1.t, W=b1.w, H=b1.h, text =  "nx", tdx=7, tdy=3, exec1=      "nx", exec2=     "nx-", tooltip = "Left click = goto next\nRight click = goto prev" },
-			[5] = { hsid = "hsQS",  L=128+b1.l, T=b1.t, W=b1.w, H=b1.h, text =  "qs", tdx=8, tdy=3, exec1=      "qs", exec2=      "qs", tooltip = "Quick-scan for current target (cp, quest, ht, qw)" },
-			[6] = { hsid = "hsREF", L=240+b1.l, T=b1.t, W=b1.w, H=b1.h, text = "ref", tdx=6, tdy=3, exec1="xgui ref", exec2="xgui ref", tooltip = "Refresh target list (cp check)" },
-			[7] = { hsid = "hsHTA", L=270+b1.l, T=b1.t, W=b1.w, H=b1.h, text = "hta", tdx=5, tdy=3, exec1=     "hta", exec2=     "hta", tooltip = "Abort hunt-trick" },
-			[8] = { hsid = "hsCLR", L=300+b1.l, T=b1.t, W=b1.w, H=b1.h, text = "clr", tdx=6, tdy=3, exec1="xgui clr", exec2="xgui clr", tooltip = "Clear target list" },
-			}
-		
+
 	function xg_draw_window()
 		WindowRectOp (win, miniwin.rect_fill, 0, 0, 0, 0, win_bgcolor)			-- Clear the window, which is the first step in updating it
 		WindowRectOp (win, 2, 0, 0, 0, 17, 0x000000)						 	-- Draw title bar background and set color (almost black, "17" is height)
@@ -2467,14 +2639,20 @@
 						"Left click = Drag title bar to move\nRight click = Send window to front/back", miniwin.cursor_arrow, 0)
 			WindowDragHandler(win, "hsDrag1", "dragmove", "dragrelease", 0)
 		end
-		for i,v in ipairs (button_1_list) do -- draw main action buttons
-			draw_button_1_A(v.L, v.T, v.text, v.hsid, v.tooltip, v.tdx, v.tdy)
-		end
+		
+		draw_action_buttons()
 		draw_circle_readout()		-- add circle text/level readout
 		draw_noexp_cutoff(213, 22)	-- add noexp cutoff indicator
+		draw_resize_tag()
 		Redraw()
 	end
 
+	function draw_action_buttons()
+		for i,v in ipairs (button_1_list) do -- draw main action buttons
+			draw_button_1_A(v.L, v.T, v.text, v.hsid, v.tooltip, v.tdx, v.tdy)
+		end
+	end
+	
 	function draw_button_1_A(L, T, text, hsName, tooltip, text_dx, text_dy)					-- Draw button type 1 (main action buttons)
 		local x,y,w,z = L, T, L+30, T+25
 		local tx,ty = (x+text_dx), (y+text_dy)	-- x and y values for text location
@@ -2509,7 +2687,7 @@
 		local left, top = 6, 22
 		local width, height = 36, 36
 		local level = cp_info_level
-		local ct = cp_info_type
+		local ct = cp_gq_info_type
 		local get_new = cpstatus_can_get_new_cp
 		local cx1,cy1 = left, top
 		local cx2,cy2 =  (left + width), (top+height)
@@ -2611,7 +2789,7 @@
 		local h = win_height
 		local rts = 15
 		local c1,c2 = 0x606060, 0xE0E0E0
-		local x,y = w-5, h-5		-- bottom of resize widget tag
+		local x,y = w-3, h-3		-- bottom of resize widget tag
 			for i=0,12,3 do
 				WindowLine(win, x-i, y, x+1, y-(i+1), c1, 0, 1)	-- bright lines
 				WindowLine(win, x-(i+2), y, x+1, y-(i+3), c2, 0, 1)	-- dark lines
@@ -2629,7 +2807,7 @@
 		xg_clear_target_hotspots()
 		if (win_state == "min") then return	end
 		local list = main_target_list
-		local font = "cplist_" .. cp_info_type
+		local font = "cplist_" .. cp_gq_info_type
 		--local font_height = WindowFontInfo(win, font, 1)
 		local index = 0
 		local resize_tag = 15
@@ -3080,195 +3258,6 @@
 	
 	function trim(s)
 		return s:match'^()%s*$' and '' or s:match'^%s*(.*%S)'
-	end
-	
---	[[ Gquest ]]	
-	function do_gq_info()
-		gq_info_list = {}
-		main_target_list = {}
-		xcp_index = 0
-		currentRoom = gmcp("room.info")
-		EnableTrigger("trg_gq_info_quest_name", true)
-		Send("gq info " .. current_gq_id)
-		xg_draw_window()
-	end
-
-	function gq_info_quest_name(name, line, wildcards)
-		local id = wildcards.gq_id
-		if (id == current_gq_id) then
-			--EnableTrigger("trg_gq_info_level_range", true)
-			EnableTrigger("trg_gq_info_quest_status", true)
-			EnableTrigger("trg_gq_info_targets", true)
-			player_on_gq = "yes"	-- if plugin somehow gets reset, if the id in gq info matches what you just joined, you're probably still in that gq
-		else
-			print("gq info quest name fail")
-			--EnableTrigger("trg_gq_info_level_range", false)
-			EnableTrigger("trg_gq_info_quest_status", false)
-			EnableTrigger("trg_gq_info_targets", false)
-		end
-	end
-	
-	function gq_info_quest_status(name, line, wildcards)
-		local st = wildcards.status
-		if st == "Preparing" then
-			EnableTrigger("trg_gq_info_targets", false)
-		end
-		gq_info_status = st
-		EnableTrigger("trg_gq_info_status", false)
-	end
-	
-	function gq_info_level_range(name, line, wildcards)
-		--local min = tonumber(wildcards.minlvl)
-		--local max = tonumber(wildcards.maxlvl)
-		--gq_info_minlvl = min
-		--gq_info_maxlvl = max
-		--EnableTrigger("trg_gq_info_level_range", false)
-	end
-	
-	function gq_info_line(name, line, wildcards)
-		local t = gq_info_list
-		local mob = wildcards.mob
-		local qty = wildcards.qty
-		local loc = wildcards.loc
-		local ord = #t+1
-		table.insert(t, { mob=mob, qty=qty, loc=loc, ord=ord } )
-	end
-	
-	function gq_info_end()
-		player_on_gq = "yes"	-- more redundancy.  gq's are a pain
-		local t = gq_info_list
-		--tprint(t)
-		local gq_type = cp_info_type_check(t)
-		print("gq type detection: "..gq_type.."\n")
-		cp_info_type = gq_type
-		SetVariable("mcvar_gq_info_type", gq_type)
-		xg_draw_window()
-		DoAfterSpecial(0.1, "do_gq_check()", sendto.script)
-	end
-	
-	function do_gq_check()
-		local time_check = os.clock()					-- prevent double cp checks from different plugins
-		if ((time_check - last_cp_check) < 1.0) then
-			return
-		end
-		last_gq_check = time_check
-		gq_check_list = {}
-		EnableTrigger("trg_gq_check_line", true)
-		Send("gq ch")
-	end
-	
-	function gq_check_line(name, line, wildcards)
-		local t = gq_check_list
-		local mob = wildcards.mob
-		local qty = wildcards.qty
-		local loc = wildcards.loc
-		local is_dead = (wildcards.isdead == "" and "no" or "yes")
-		local ord = #t+1
-		table.insert(t, { mob=mob, qty=qty, loc=loc, is_dead=is_dead, ord=ord })
-	end
-	
-	function gq_check_end()
-		player_on_gq = "yes"	-- if you can pull gq check, you must be in the gq.  Adds redundancy in case plugin/data get reset somehow.
-		win_circle_readout = "gq"
-		build_gq_target_list()
-		if (xcp_retry_stat == 2) then
-			if (xcp_index == 0) or (xcp_index == 1) then
-				xcp_retry_stat = 0
-				xcp_noarg()
-			else
-				xcp_retry_stat = 0
-				Execute("xcp " .. xcp_index)
-			end
-		end
-		xcp_retry_stat = 0
-	end
-	
---	[[ Build gq target list process path ]]
-	function build_gq_target_list()
-		local list = gq_check_list
-		local sqla = " SELECT uid as arid, name as areaName " .. "FROM areas " .. "WHERE name = %s " .. "ORDER BY arid ASC "
-		local sqlr = " SELECT r.uid as roomid, r.name as roomName, a.uid as arid, a.name as areaName, 'room' as type " .. "FROM rooms r " .. "INNER JOIN areas a ON r.area = a.uid " .. "WHERE r.name = %s " .. "ORDER BY arid ASC "
-		local t = {}
-		local gq_type = cp_info_type
-		if gq_type == "area" then	-- branch for area cp
-			t = build_area_targets(list, sqla)	
-		elseif gq_type == "room" then	-- branch for room cp
-			t = build_room_targets(list, sqlr, sqla)
-		elseif gq_type == "none" then	-- should never be called but who knows
-			print("gq target builder error - attempt to run while not on campaign")
-			return
-		end
-		--for i,v in ipairs (t) do
-		--	v.kw = gmkw(v.mob, v.arid)
-		--end
-		main_target_list = copytable(t)
-		print_target_links()
-		xg_refresh_window()
-	end
-	
-	function gq_has_started(name, line, wildcards)
-		local id = wildcards.gq_id
-		if current_gq_id ~= id then
-			return
-		end
-		local min = wildcards.min_lvl
-		local max = wildcards.max_lvl
-		gq_info_minlvl = min
-		gq_info_maxlvl = max
-		gq_info_status = "Active"
-		SetVariable("mcvar_gq_info_minlvl", min)
-		SetVariable("mcvar_gq_info_maxlvl", max)
-		SetVariable("mcvar_gq_info_status", "Active")
-		if id == current_gq_id then
-			do_gq_info()
-		end
-		gq_started = "yes"
-	end
-	
-	function gq_mob_killed()
-		short_mob_name = -1
-		full_mob_name = -1
-		xcp_retry_stat = 1
-		xcp_index = 0
-		gotoIndex = 1
-		gotoList = {}
-		qw = {}
-		do_gq_check()
-	end
-	
-	function gq_join(name, line, wildcards)
-		current_gq_id = wildcards.gq_id
-		print(current_gq_id)
-		SetVariable("mcvar_current_gq_id", current_gq_id)
-		player_on_gq = "yes"
-	end
-	
-	function player_is_on_gq()
-		player_on_gq = "yes"
-		xg_refresh_window()
-	end
-
-	function player_not_on_gq()
-		EnableTriggerGroup ("trg_gq", false)
-		cp_info_type = "none"
-			SetVariable("mcvar_gq_info_type", "none")
-		gq_info_minlvl = 1
-			SetVariable("mcvar_gq_info_minlvl", "1")
-		gq_info_maxlvl = 300
-			SetVariable("mcvar_gq_info_maxlvl", "300")
-		gq_info_status = "none"
-			SetVariable("mcvar_gq_info_status", "none")
-		current_gq_id = ""
-			SetVariable("mcvar_current_gq_id", "")
-		player_on_gq = "no"
-		gq_info_list = {}
-		gq_check_list = {}
-		xcp_index = 0
-		xg_draw_window()
-		if (player_on_cp == "yes") then
-			ColourNote("#FF5000", "#000000", "Reloading your cp targets....")
-			do_cp_info()
-		end
 	end
 
 ]]>
@@ -3745,7 +3734,7 @@
 			enabled="y" regexp="y" sequence="99" ignore_case="y" > </alias>
 
 <!-- xset commands -->
-	<alias  match="^xset area index$"
+	<alias  match="^xset (?:index areas?|area index)$"
 			script="area_index_process"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 			
@@ -3804,6 +3793,37 @@
 	<alias	match="^xset resume page size$"
 			script="resume_page_size"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
-
 </aliases>
+
+<!-- Remove before public release -->
+<aliases>
+	<alias 	match="^(?:go|goto)( (?<id>[0-9]+))?$"
+			enabled="y" regexp="y" sequence="100" ignore_case="y" keep_evaluating="y" send_to="12" >
+				<send>	Execute("xdual") </send> </alias>
+</aliases>
+
+<triggers>
+	<trigger match="^Congratulations, that was one of your CAMPAIGN mobs\!$"
+		name="trg_xcp_auto_cp_mob_killed" group="trg_auto"
+		enabled="y"	regexp="y" sequence="100" keep_evaluating="y" send_to="12" >
+			<send>	EnableTrigger("trg_xcp_auto_cp", true)
+					Execute("bx") </send> </trigger>
+					
+	<trigger match="^Congratulations, that was one of the GLOBAL QUEST mobs\!$"
+		name="trg_xcp_auto_gq_mob_killed" group="trg_auto"
+		enabled="y"	regexp="y" sequence="100" keep_evaluating="y" send_to="12" > 
+			<send>	EnableTrigger("trg_xcp_auto_gq", true)
+					Execute("bx") </send> </trigger>		
+		
+	<trigger match="^You have (?:(?:\d+ day(?:s)?, )?\d+ hour(?:s)? and )?\d+ minute(?:s)? left to finish this campaign\.$"
+		script="xcp_auto_cp"
+		name="trg_xcp_auto_cp" group="trg_auto"
+		enabled="n"	regexp="y" sequence="100" keep_evaluating="y" > </trigger>
+
+	<trigger match="^You may win [0123] more gquests? at this level\.$"
+		script="xcp_auto_gq"
+		name="trg_xcp_auto_gq" group="trg_auto"
+		enabled="n"	regexp="y" sequence="100" keep_evaluating="y" > </trigger>		
+		
+</triggers>
 </muclient>
