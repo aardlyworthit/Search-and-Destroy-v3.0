@@ -6,14 +6,20 @@
 - Autohunt is very useful for navigating mazes, but may put you at risk of aggressive monsters.
 - Autohunt requires you to practice up your hunt for it to work.  If your skill is too low, autohunt will not work (it would be pointless as all the directions would be wrong).  Note that this has no effect on the hunt trick (see "ht" hunt trick below).
 
-### campaign: "xcp" command - target a mob on your 'cp check' list and get location
+### Campaign: "xcp" command - target a mob on your main target list, and get location
 - '**xcp**' targets the first available mob on your cp list and gets possible locations. "Available" means living and location is known.  E.g. the first four mobs on your list are all dead, unknown, and/or both, "xcp" will ignore all of those and target the 5th mob.
-- '**xcp** \<*n*\>' targets the *n*th target on your cp list, dead or alive.  If dead, the MUD only ever gives the area name, even if the cp is room, so dead mobs are always handled as if the cp were area.
+- '**xcp** \<*n*\>' targets the *n*th target on your main target list, dead or alive.  If dead, the MUD only ever gives the area name, even if the cp is room, so dead mobs are always handled as if the cp were area.
 - '**xcp 0**' clears the current target and its room search results.
 - '**xcp mode** \<**ht**\|**qw**\|**off**\>' determines what xcp does after running to an area — "ht", "qw", nothing (area cp's only).  In most cases, setting it to "qw" (quick-where) will find the right mob without having to hunt trick, which is faster.  
 - For area cp's, "xcp" first runs to target area.  Upon arrival, it does hunt trick (default) to pick out your cp mob, then does quick-where to get room(s).  If the area has duplicate roomnames, your mob could be in any of them, use 'nx' to check through them.
 - For room cp's, "xcp" gets the room and area info from mapper and generates a direct run to that room.  If the same roomname exists in multiple areas, the cp target list builder will generate a list index for each of them, which can be barely noticeable, or flood the whole list with 12 links for one mob.  This is on the list of current problem-solve items and sooner or later will probably be fixed.
 - Unknown mobs can't be targeted because the location isn't in your mapper db.  For area cp's, this means you've never been to the area at all.  For room cp's it means you haven't mapped any rooms with that name in any area — in most of these cases you'll have been to the area before, but haven't explored (i.e. mapped) every room.
+
+### Gquest:
+- When you join a gquest, you can do 'gq info' when the gq has started.  S&D will read the relevant gq data and update the display with links for the mobs.
+- The commands for campaigns and gquest are the same (xcp, go, etc.).
+- 'cp info' will reload your campaign targets, and 'gq info' will reload your gq targets, allowing you to switch between them.  You must use 'info' and not 'check' because S&D doesn't cache the data when switching, and will need to re-process it from scratch.
+- In gquest, you are subject to competition mechanics and whatever interference others throw at you — S&D is unable to address these concerns.
 
 ### "goto" command — run to room within area after getting search results
 - '**go**' runs to first room on the list returned by hunt trick / quick where.
@@ -42,13 +48,6 @@
 - '**qw** \<*n*.**mobname**\>' gets results for *n*.mobname (e.g. 3.fido).
 - Note that "qw" searches only one target, unlike hunt trick (whose input looks similar).  Use "xwhere" to 'where' multiple mobname instances.
 - "qw" will fail if the mob is flagged no-where, or in a dark room.  It works intermittently on hidden mobs due to your detect roll vs hidden.
-
-### Gquest:
-- Gquest handling is automatic and will take over when you join a gq.
-- For the most part, the commands are the same as when you are doing a cp.
-- '**gg**' is an alias for 'gq check'.
-- To reload campaign targets while on a gquest, do 'cp ch'.
-- To reload your gquest targets, do 'gq ch'.
 
 ### Automatic noexp toggle:
 - '**xset noexp** \<*n*\>' turns automatic noexp on and sets the TNL cutoff to *n*, for n > 0.
