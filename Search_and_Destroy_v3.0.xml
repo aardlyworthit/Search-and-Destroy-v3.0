@@ -2,23 +2,12 @@
 <!-- Saved on Saturday, July 05, 2008, 4:46 PM -->
 <muclient>
 <plugin name="Search_and_Destroy_v3" version="3.0" id="30000000537461726C696E67" date_written="2018-12-31 23:00:00" author="Starling" language="Lua" purpose="Rock the casbah !!" save_state="y" requires="5.06" >
-<description trim="n">
-<![CDATA[
-	--[[ Search and Destroy version history:
-	--	 1.0  - WinkleWinkle	Original author of S&D, the first (and to this day, only) campaign accelerator to be publicly available.
-	--	 1.1  - Nokfah			Fixed compatibility issue when a mapper update rendered 1.0 inoperable.  Originally versioned "2.8".
-	--	 1.2  - Lunk			Briefly hosted in early 2017.  Banned on 27 Apr for unrelated reasons (trolling).
-	--	 1.3  - Starling		Active developer and problem fixer as of 1 Jun 2017.  v1.3.0 was the first true update (bugfixes 
-	--							and features) since S&D came out 9 years before.  Updates continued through v1.3.5.
-	--   2.0  - Starling		S&D unified into a single plugin, making it faster and more stable, and solving many problems.  
-	--
-	-- 	Happy hunting, ninjas. --]]
-]]>
-</description> </plugin>
+<description trim="n"> </description> </plugin>
 
 <!-- Isolinear intermatrix (utility module) -->
 <include name="constants.lua"/>
 <variables><variable name="example"></variable></variables>
+	
 <timers>
 	<timer name="tim_init_plugin"
 		second="0.5" active_closed="y"
