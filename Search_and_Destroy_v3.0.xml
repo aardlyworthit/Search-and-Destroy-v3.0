@@ -63,14 +63,18 @@
 	
 -- [[ Execute in area ]]
 	local execute_in_area_tbl = {}
+
+
+
+-- [[ main target data ]]
+	local main_target_list = {}
+	local cp_gq_info_type = "init"
 	
 -- [[ campaign data ]]
 	local cp_info_level = tonumber(GetVariable("mcvar_cp_level")) or 0
-	local cp_gq_info_type = "init"
 	local cp_info_list = {}
 	local cp_check_list = {}
 	local last_cp_check = os.clock()
-	local main_target_list = {}
 	
 -- [[cp status, etc. ]]	
 	local cpstatus_can_get_new_cp = "no"
@@ -78,8 +82,8 @@
 	
 -- [[ gquest data ]]
 	local current_gq_id = GetVariable("mcvar_current_gq_id") or ""
-	local gq_info_minlvl = tonumber(GetVariable("mcvar_gq_info_minlvl")) or 1
-	local gq_info_maxlvl = tonumber(GetVariable("mcvar_gq_info_maxlvl")) or 300
+	--local gq_info_minlvl = tonumber(GetVariable("mcvar_gq_info_minlvl")) or 1
+	--local gq_info_maxlvl = tonumber(GetVariable("mcvar_gq_info_maxlvl")) or 300
 	local gq_info_status = GetVariable("mcvar_gq_info_status") or "none"
 	local gq_info_type = "none"
 	local gq_info_list = {}
@@ -1065,6 +1069,17 @@
 		return (cpstatus_can_get_new_cp == "yes") and true or false
 	end
 	
+	function cp_mob_killed()
+		short_mob_name = -1
+		full_mob_name = -1
+		xcp_retry_stat = 1
+		xcp_index = 0
+		gotoIndex = 0
+		gotoList = {}
+		qw = {}
+		do_cp_check()
+	end
+	
 --	[[ "cp info" process path ]]
 	function do_cp_info()
 		cp_info_list = {}
@@ -1074,7 +1089,7 @@
 		EnableTrigger("trg_cp_info_level_taken", true)
 		EnableTrigger("trg_cp_info_targets", true)
 		SendNoEcho("cp info")
-		xg_draw_window()
+		xg_draw_window()	-- redraw the window during latency period between sending the command and receiving a response, which would otherwise be 'dead' time.
 	end
 	
 	function cp_info_level_taken(name, line, wildcards)
@@ -1103,11 +1118,10 @@
 	end
 	
 	function cp_gq_info_type_check(list)
-		local t = list
 		local areaCount = 0
 		local roomCount = 0
-		local ct
-		for i,v in ipairs (t) do
+		local cgt
+		for i,v in ipairs (list) do
 			if areaNameXref[v.loc] then
 				areaCount = areaCount + 1
 			else
@@ -1115,22 +1129,11 @@
 			end
 		end
 		if (areaCount >= roomCount) then
-			ct = "area"
+			cgt = "area"
 		else
-			ct = "room"
+			cgt = "room"
 		end
-		return ct
-	end
-	
-	function cp_mob_killed()
-		short_mob_name = -1
-		full_mob_name = -1
-		xcp_retry_stat = 1
-		xcp_index = 0
-		gotoIndex = 0
-		gotoList = {}
-		qw = {}
-		do_cp_check()
+		return cgt
 	end
 	
 -- [[ "cp check" process path ]]
@@ -1227,7 +1230,6 @@
 	function gq_info_end()
 		player_on_gq = "yes"	-- more redundancy.  gq's are a pain
 		local t = gq_info_list
-		--tprint(t)
 		local gq_type = cp_gq_info_type_check(t)
 		print("gq type detection: "..gq_type.."\n")
 		cp_gq_info_type = gq_type
@@ -1280,11 +1282,11 @@
 		end
 		local min = wildcards.min_lvl
 		local max = wildcards.max_lvl
-		gq_info_minlvl = min
-		gq_info_maxlvl = max
+		--gq_info_minlvl = min
+		--gq_info_maxlvl = max
 		gq_info_status = "Active"
-		SetVariable("mcvar_gq_info_minlvl", min)
-		SetVariable("mcvar_gq_info_maxlvl", max)
+		--SetVariable("mcvar_gq_info_minlvl", min)
+		--SetVariable("mcvar_gq_info_maxlvl", max)
 		SetVariable("mcvar_gq_info_status", "Active")
 		if id == current_gq_id then
 			do_gq_info()
@@ -1319,10 +1321,10 @@
 		EnableTriggerGroup ("trg_gq", false)
 		cp_gq_info_type = "none"
 			SetVariable("mcvar_gq_info_type", "none")
-		gq_info_minlvl = 1
-			SetVariable("mcvar_gq_info_minlvl", "1")
-		gq_info_maxlvl = 300
-			SetVariable("mcvar_gq_info_maxlvl", "300")
+		--gq_info_minlvl = 1
+		---	SetVariable("mcvar_gq_info_minlvl", "1")
+		--gq_info_maxlvl = 300
+		--	SetVariable("mcvar_gq_info_maxlvl", "300")
 		gq_info_status = "none"
 			SetVariable("mcvar_gq_info_status", "none")
 		current_gq_id = ""
