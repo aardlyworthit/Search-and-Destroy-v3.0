@@ -1,4 +1,6 @@
 # Search and Destroy v3.0 (rel-1.0.0) — 1 Jan 2019
+Note: Make sure to uninstall version 2.  Version 3 uses a different plugin id, so it's possible to have both installed at once.  
+
 As a result of Lasher and the Immortals forking and hosting version 2, I am releasing a new, third version to make clear the distinction between *this* project and whatever else exists.  Version 2 was the best of all of them, and this version is already better than that.  S&D is literally better than itself.
 
 Happy 2019.  Welcome to version 3.
