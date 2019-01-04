@@ -22,7 +22,7 @@ So let's get this straight:
 - Lasher wouldn't let me reply via tell or note, which shows he had no interest in being constructive or resolving anything at all.
 - Lasher essentially lied ("strongly implied") that I was banned *after* and *because of* sending nasty email—when actually, I wasn't!
 
-If you are actually OK with Lasher deliberately trolling a contributor to his game, banning then when they become upset over it, and then lying to the community about the reasons, I don't know what to tell you.
+If you are actually OK with Lasher deliberately trolling a contributor to his game, banning them when they become upset over it, and then lying to the community about the reasons, I don't know what to tell you.
 
 Based on the facts of what happened, I should not have been banned because I did nothing wrong.  If my ban were truly justified, Lasher would be able to explain it clearly and be done with it.  He wouldn't need to leave anything out or claim it was because of something else, but that is exactly what he did.  Why would I have sent him nasty emails before being banned, anyway?  Lasher wants you to believe he's the victim here, but in view of his actions before the ban and his dishonesty after, the truth is **he's not**.
 
