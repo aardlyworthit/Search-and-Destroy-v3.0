@@ -16,7 +16,7 @@
 - Unknown mobs can't be targeted because the location isn't in your mapper db.  For area cp's, this means you've never been to the area at all.  For room cp's it means you haven't mapped any rooms with that name in any area — in most of these cases you'll have been to the area before, but haven't explored (i.e. mapped) every room.
 
 ### Gquest:
-- When you join a gquest, you can do 'gq info' when the gq has started.  S&D will read the relevant gq data and update the display with links for the mobs.  From there, it handles just like a cp,
+- When you join a gquest, you can do 'gq info' when the gq has started.  S&D will read the relevant gq data and update the display with links for the mobs.  From there, it handles just like a cp.
 - The commands for campaigns and gquest are the same (xcp, go, etc.).
 - 'cp info' will reload your campaign targets, and 'gq info' will reload your gq targets, allowing you to switch between them.  You must use 'info' and not 'check' because S&D doesn't cache the data when switching, and will need to re-process it from scratch.
 - In gquest, you are subject to competition mechanics, bad luck, PvP ganking, and whatever interference others throw at you — S&D is unable to address these concerns.
