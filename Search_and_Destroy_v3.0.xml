@@ -3794,36 +3794,4 @@
 			script="resume_page_size"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 </aliases>
-
-<!-- Remove before public release -->
-<aliases>
-	<alias 	match="^(?:go|goto)( (?<id>[0-9]+))?$"
-			enabled="y" regexp="y" sequence="100" ignore_case="y" keep_evaluating="y" send_to="12" >
-				<send>	Execute("xdual") </send> </alias>
-</aliases>
-
-<triggers>
-	<trigger match="^Congratulations, that was one of your CAMPAIGN mobs\!$"
-		name="trg_xcp_auto_cp_mob_killed" group="trg_auto"
-		enabled="y"	regexp="y" sequence="100" keep_evaluating="y" send_to="12" >
-			<send>	EnableTrigger("trg_xcp_auto_cp", true)
-					Execute("bx") </send> </trigger>
-					
-	<trigger match="^Congratulations, that was one of the GLOBAL QUEST mobs\!$"
-		name="trg_xcp_auto_gq_mob_killed" group="trg_auto"
-		enabled="y"	regexp="y" sequence="100" keep_evaluating="y" send_to="12" > 
-			<send>	EnableTrigger("trg_xcp_auto_gq", true)
-					Execute("bx") </send> </trigger>		
-		
-	<trigger match="^You have (?:(?:\d+ day(?:s)?, )?\d+ hour(?:s)? and )?\d+ minute(?:s)? left to finish this campaign\.$"
-		script="xcp_auto_cp"
-		name="trg_xcp_auto_cp" group="trg_auto"
-		enabled="n"	regexp="y" sequence="100" keep_evaluating="y" > </trigger>
-
-	<trigger match="^You may win [0123] more gquests? at this level\.$"
-		script="xcp_auto_gq"
-		name="trg_xcp_auto_gq" group="trg_auto"
-		enabled="n"	regexp="y" sequence="100" keep_evaluating="y" > </trigger>		
-		
-</triggers>
 </muclient>
