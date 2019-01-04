@@ -53,11 +53,10 @@
 - '**xset noexp** \<*n*\>' turns automatic noexp on and sets the TNL cutoff to *n*, for n > 0.
 - '**xset noexp 0**' turns auto-noexp off.
 - '**xset noexp off**' also turns auto-noexp off.
-- If auto-noexp is on, it will turn noexp on when you can take a new cp at your current level and your TNL drops below the cutoff.
-- Likewise, noexp is toggled off when your TNL is above the cutoff, or when you must level before taking a new cp.
-- When you take a new cp, auto-noexp turns noexp off and allows you to level up and continue gaining xp until TNL drops below the cutoff.  This makes cp-levelling more time efficient - most of your levelling xp will be gained while doing your cp.
-- To prevent over-levelling and missing a cp, set your TNL cutoff high enough such that massive xp gain (from doubles, etc.) won't exceed current TNL and cause you to level up.  A cutoff of 1000 is usually reliable, 1500 almost never fails, and 2000 never fails.
-- Missed cp's due to over-levelling represents an opportunity cost that is significant, but easy to overlook.  Using auto-noexp maximizes your QP gains by
+- If you cannot take a new cp at your current level, auto-noexp turns 'noexp' off (enabling exp gain) and allows you to level up.
+- If you can take a new cp at your current level, auto-noexp turns 'noexp' off (enabling exp gain) while your TNL is above the cutoff amount that you set.  When your TNL drops below the cutoff, auto-noexp will turn 'noexp' on, stopping exp gain until you finish your cp and request a new one.
+- Your TNL cutoff should be high enough that over-levelling from massive single-kill xp gain (from stacked doubles, rare kills, etc.) is unlikely—a setting of 1000 to 1200 would be typical.
+- When you reach level 200/1, auto-noexp will turn 'noexp' off and leave it off until you remort.
 
 ### Vidblain navigation
 - '**xset vidblain**' turns on Vidblain navigation, which allows one to quickly and easily cross the dark portal into Vidblain.  It also compensates for the portal's reality-distortion and uncertain transit vector and landing room, enabling straightforward travel to Vidblain destinations which would otherwise be tedious at best.
