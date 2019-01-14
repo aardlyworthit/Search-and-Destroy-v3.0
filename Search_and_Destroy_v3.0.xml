@@ -1219,8 +1219,9 @@
 	function gq_info_end()
 		player_on_gq = "yes"	-- more redundancy.  gq's are a pain
 		local t = gq_info_list
+		cp_info_level_taken = gmcp("char.status.level")	-- room gq's will crash without a sensible value here, just use current player level
 		local gq_type = cp_gq_info_type_check(t)
-		print("gq type detection: "..gq_type.."\n")
+		print("gq type detection: "..gq_type.." (level "..cp_info_level_taken..")\n")
 		cp_gq_info_type = gq_type
 		SetVariable("mcvar_gq_info_type", gq_type)
 		xg_draw_window()
