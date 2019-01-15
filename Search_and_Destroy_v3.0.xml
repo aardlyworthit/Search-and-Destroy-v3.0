@@ -1423,9 +1423,9 @@
 						-- do nothing
 					else
 						last_mob_sig = mob_sig
-						if player_on_gq == "yes" then
-							level_taken = gq_info_maxlvl
-						end
+						--if player_on_gq == "yes" then
+						--	level_taken = gq_info_maxlvl
+						--end
 						if (level_taken >= min_lvl) and (level_taken <= (max_lvl+10)) then	-- filter results outside sensible level range.
 							table.insert(t, {
 								mob = v.mob,
