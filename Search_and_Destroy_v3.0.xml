@@ -7,7 +7,7 @@
 <!-- Isolinear intermatrix (utility module) -->
 <include name="constants.lua"/>
 <variables><variable name="example"></variable></variables>
-	
+
 <timers>
 	<timer name="tim_init_plugin"
 		second="0.5" active_closed="y"
@@ -80,7 +80,6 @@
 	local last_gq_check = os.clock()
 	
 -- [[ gq status, etc.]]
-	local gq_started = "no"
 	local gq_extended = "no"
 	local player_on_gq = "no"
 
@@ -163,7 +162,7 @@
 				currentRoom = { rmid = r.num, arid = r.zone, exits = r.exits, maze = r.maze } or {}
 			elseif (text == "comm.quest") then	-- get quest info
 				local q = gmcp("comm.quest")
-				quest_target_gmcp(q)
+				quest_status_gmcp(q)
 			elseif (text == "config") then		-- get config data, needed for automatic noexp
 				noexp_onoff = (gmcp("config.noexp") == "YES") and "on" or "off"
 			end
@@ -973,36 +972,35 @@
 		Execute("xm "..qt.room.."|"..qt.arid)
 	end
 	
-	function quest_target_gmcp(q)
-			-- quest status changed by taking new quest, killing mob, completing quest, or waiting/time running out.
-			if (q.action == "killed") then	-- you've just killed the target
-				quest_target.qstat = "3"
-			elseif (q.action == "start") then	-- get quest info when taking new quest, or before you kill the target
-				quest_target = { qstat = "2", mob = q.targ,	areaName = q.area, arid = areaNameXref[q.area], room = q.room }
-				start_new_quest()
-			elseif (q.action == "comp") or (q.action == "fail") or (q.action == "reset") then -- must wait if you q complete, q fail, or qreset.
-				quest_target = { qstat="1"}
-				short_mob_name = ""
-				gotoIndex = 0
-				gotoList = {}
-				qw = {}
-			elseif (q.action == "ready") or (q.action == "timeout") then -- can take new quest immediately		
-				quest_target = { qstat="0"}
-			
-			-- in all of these, the action is "status"
-			elseif (q.action == "status" and q.target == "killed") then	-- do not confuse q.target with q.targ above!  
-				quest_target.qstat = "3"
-				ColourNote("#FF5000", "", "\nSearch and Destroy: You have already killed your quest target!\n")
-			elseif (q.action == "status" and q.targ and q.timer) then
-				quest_target = { qstat="2", mob = q.targ, areaName = q.area, arid = areaNameXref[q.area], room = q.room }
-				target_quest_mob()			
-			elseif (q.action == "status" and (q.wait)) then -- off quest, must wait before taking new
-				quest_target = { qstat="1"}
-				ColourNote("#FF5000", "", "\nSearch and Destroy: Not on quest - must wait before requesting new.\n")
-			elseif (q.action == "status" and q.status == "ready") then -- off quest, can get new quest now
-				quest_target = { qstat="0"}
-				ColourNote("#FF5000", "", "\nSearch and Destroy: Not on quest - can request new quest immediately. \n")
-			end
+	function quest_status_gmcp(q)	-- sets quest status when you take a new quest, kill qmob, complete quest, etc.
+		if (q.action == "killed") then	-- you've just killed the target
+			quest_target.qstat = "3"
+		elseif (q.action == "start") then	-- you've just taken a new quest
+			quest_target = { qstat = "2", mob = q.targ,	areaName = q.area, arid = areaNameXref[q.area], room = q.room }
+			start_new_quest()
+		elseif (q.action == "comp") or (q.action == "fail") or (q.action == "reset") then -- quest has ended (completed, failed, or reset)
+			quest_target = { qstat="1"}
+			short_mob_name = ""
+			gotoIndex = 0
+			gotoList = {}
+			qw = {}
+		elseif (q.action == "ready") or (q.action == "timeout") then -- can take new quest immediately		
+			quest_target = { qstat="0"}
+		
+		-- in all of these, the action is "status"
+		elseif (q.action == "status" and q.target == "killed") then		-- on quest, qmob has been killed (do not confuse q.target with q.targ above!)
+			quest_target.qstat = "3"
+			ColourNote("#FF5000", "", "\nSearch and Destroy: You have already killed your quest target!\n")
+		elseif (q.action == "status" and q.targ and q.timer) then		-- on quest, qmob not yet killed
+			quest_target = { qstat="2", mob = q.targ, areaName = q.area, arid = areaNameXref[q.area], room = q.room }
+			target_quest_mob()			
+		elseif (q.action == "status" and (q.wait)) then					-- off quest, must wait before requesting new
+			quest_target = { qstat="1"}
+			ColourNote("#FF5000", "", "\nSearch and Destroy: Not on quest - must wait before requesting new.\n")
+		elseif (q.action == "status" and q.status == "ready") then		-- off quest, can request new quest immediately
+			quest_target = { qstat="0"}
+			ColourNote("#FF5000", "", "\nSearch and Destroy: Not on quest - can request new quest immediately. \n")
+		end
 	end
 	
 --	[[ general cp status process / functions ]]
@@ -1037,12 +1035,12 @@
 		cp_check_list = {}
 		xcp_index = 0
 		player_on_cp = "no"
-		do_trg_cp_complete()
+		--do_trg_cp_complete()
 		xg_refresh_window()
 		SetVariable("mcvar_cp_info_type", "none")
 		SetVariable("mcvar_cp_level", "0")
 	end
-	
+ 	
 	function cp_check_can_get_new_cp()
 		cpstatus_can_get_new_cp = "yes"
 		noexp_can_get_new_cp()
@@ -1054,6 +1052,7 @@
 		noexp_must_level_new_cp()
 		xg_refresh_window()
 	end	
+	
 	function can_player_get_new_cp()
 		return (cpstatus_can_get_new_cp == "yes") and true or false
 	end
@@ -1097,13 +1096,14 @@
 	end
 	
 	function cp_info_end()
+		player_on_cp = "yes"
 		local t = cp_info_list
 		local ct = cp_gq_info_type_check(t)
-		print("cp type detection: "..ct.." (level "..cp_info_level..")\n")
 		cp_gq_info_type = ct
 		SetVariable("mcvar_cp_info_type", ct)
-		xg_draw_window()
-		DoAfterSpecial(0.1, "do_cp_check()", sendto.script)
+		print("cp type detection: "..ct.." (level "..cp_info_level..")\n")
+		DoAfterSpecial(0.1, [[ do_cp_check()
+		                       xg_draw_window() ]], sendto.script)
 	end
 	
 	function cp_gq_info_type_check(list)
@@ -1149,6 +1149,7 @@
 	end
 	
 	function cp_check_end(name, line, wildcards)
+		player_on_cp = "yes"
 		win_circle_readout = "cp"
 		build_main_target_list("cp")
 		if (xcp_retry_stat == 2) then
@@ -1194,18 +1195,20 @@
 		local st = wildcards.status
 		if st == "Preparing" then
 			EnableTrigger("trg_gq_info_targets", false)
+		else
+			EnableTrigger("trg_gq_info_targets", true)
 		end
 		gq_info_status = st
 		EnableTrigger("trg_gq_info_status", false)
 	end
 	
-	function gq_info_level_range(name, line, wildcards)
+	--function gq_info_level_range(name, line, wildcards)
 		--local min = tonumber(wildcards.minlvl)
 		--local max = tonumber(wildcards.maxlvl)
 		--gq_info_minlvl = min
 		--gq_info_maxlvl = max
 		--EnableTrigger("trg_gq_info_level_range", false)
-	end
+	--end
 	
 	function gq_info_line(name, line, wildcards)
 		local t = gq_info_list
@@ -1218,10 +1221,11 @@
 	
 	function gq_info_end()
 		player_on_gq = "yes"	-- more redundancy.  gq's are a pain
+		--win_circle_readout = "gq"
 		local t = gq_info_list
-		cp_info_level_taken = gmcp("char.status.level")	-- room gq's will crash without a sensible value here, just use current player level
 		local gq_type = cp_gq_info_type_check(t)
-		print("gq type detection: "..gq_type.." (level "..cp_info_level_taken..")\n")
+		cp_info_level_taken = gmcp("char.status.level")	-- room target builder will crash without a sensible value here.  Just use current player level.
+		print("gq type detection: "..gq_type.." (level " .. cp_info_level_taken .. ")\n")
 		cp_gq_info_type = gq_type
 		SetVariable("mcvar_gq_info_type", gq_type)
 		xg_draw_window()
@@ -1270,8 +1274,8 @@
 		if current_gq_id ~= id then
 			return
 		end
-		local min = wildcards.min_lvl
-		local max = wildcards.max_lvl
+		--local min = wildcards.min_lvl
+		--local max = wildcards.max_lvl
 		--gq_info_minlvl = min
 		--gq_info_maxlvl = max
 		gq_info_status = "Active"
@@ -1281,7 +1285,6 @@
 		if id == current_gq_id then
 			do_gq_info()
 		end
-		gq_started = "yes"
 	end
 	
 	function gq_mob_killed()
@@ -1299,7 +1302,7 @@
 		current_gq_id = wildcards.gq_id
 		print(current_gq_id)
 		SetVariable("mcvar_current_gq_id", current_gq_id)
-		player_on_gq = "yes"
+		player_on_gq = "no"
 	end
 	
 	function player_is_on_gq()
@@ -1311,10 +1314,6 @@
 		EnableTriggerGroup ("trg_gq", false)
 		cp_gq_info_type = "none"
 			SetVariable("mcvar_gq_info_type", "none")
-		--gq_info_minlvl = 1
-		---	SetVariable("mcvar_gq_info_minlvl", "1")
-		--gq_info_maxlvl = 300
-		--	SetVariable("mcvar_gq_info_maxlvl", "300")
 		gq_info_status = "none"
 			SetVariable("mcvar_gq_info_status", "none")
 		current_gq_id = ""
@@ -1322,6 +1321,7 @@
 		player_on_gq = "no"
 		gq_info_list = {}
 		gq_check_list = {}
+		main_target_list = {}
 		xcp_index = 0
 		xg_draw_window()
 		if (player_on_cp == "yes") then
@@ -1337,6 +1337,7 @@
 			list = cp_check_list
 		elseif (cp_gq == "gq") then
 			list = gq_check_list
+			cp_info_level_taken = gmcp("char.status.level")
 		else
 			print("main target list build error - function arg can only be 'cp' or 'gq'")
 			return
@@ -1401,7 +1402,7 @@
 		local t = {}
 		local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
 		local db = assert(sqlite3.open(worldPath .. ".db"))
-		local level_taken = tonumber(cp_info_level) or 0
+		local level_taken = tonumber(cp_info_level) or gmcp("char.status.level")
 		for i,v in ipairs (list) do
 			local results_found = false
 			local select = string.format(sqlr, fixsql(v.loc))
@@ -1592,9 +1593,6 @@
 				if (mode == "ht") or (mode == "qw") then		-- do hunt trick or quick where after arriving in area.
 					local func = function() Execute(mode .. " " .. t.kw) end
 					execute_in_area("xcp_goto_target", t.arid, func)
-			--	elseif (mode == "qw") then	-- do automatic quick where.
-			--		local func = function() Execute("qw " .. t.kw) end
-			--		execute_in_area("xcp_goto_target", t.arid, func)
 				elseif (mode == "off") then	-- do nothing
 					ColourNote("#FF5000", "", "Xcp mode is off - no additional action\n")
 				end
@@ -2278,6 +2276,7 @@
 -- [[ xrunto, xset mark, etc. ]]
 	local xrun_to_sql_uid =  "SELECT r.uid, r.name as room, r.area " .. "FROM rooms r " .. "WHERE r.area like %s " .. "ORDER BY r.name "
 	local xrun_to_sql_name = "SELECT r.uid, r.name as room, r.area " .. "FROM rooms r " .. "INNER JOIN areas a ON a.uid = r.area " .. "WHERE r.area like %s OR a.name like %s " .. "ORDER BY r.name "
+ 	
 	function xrun_to(name, line, wildcards)
 		local destination = wildcards.loc
 		local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))		-- finds your mapper database
@@ -2285,19 +2284,20 @@
 		if (destination == "ft2") then destination = "ftii" end	-- HACK for ftii (allows one to 'xrt ft2' as well as 'xrt ftii')
 		local startRoom = get_start_room(destination)			-- Check for xset marked room
 		if (startRoom == "-1") then		-- area has no start room defined.
-			ColourNote("#FF5000", "", "X-runto: There is no default start room defined for area '" .. destination .. "'.\n")
+			ColourNote("#FF5000", "", "X-runto: No default start room is defined for area: " .. destination .. ".\n")
 			SendNoEcho("areas 1 299 keywords " .. destination)
 		else	-- start room is either 'xset marked' or has a preset default, so we'll go there.
 			ColourNote("#FF5000", "", "X-runto: " .. destination .. ", room ID: " .. startRoom .. " (" .. start_room_type .. ")\n")
 			goto_room(startRoom)
 		end			
 	end
+ 	
 	function xset_to_mark(name, line, wildcards)
 		areaStartRooms[currentRoom.arid] = { areaname = "temp", roomid = currentRoom.rmid }
 		ColourNote("#FF5000", "", "\n" .. currentRoom.rmid .. " set as starting room for " .. currentRoom.arid .. "\n")
 		SetVariable("areaStartRooms", serialize.save_simple(areaStartRooms))
 	end
-	
+ 	
 	function get_start_room(area_id)
 		local arid = string.lower(area_id)		
 		start_room_type = "xset mark"					-- If 'xset mark' was set, xrunto will go there.
@@ -2320,7 +2320,7 @@
 		end		
 		return "-1"
 	end
-	
+ 	
 --	[[ "xset vidblain" processes ]]
 	function xset_vidblain(name, line, wildcards)
 		local x = xset_vidblain_onoff
@@ -2331,7 +2331,7 @@
 					"#00C040", "", string.upper(x))
 		print("\n")
 	end
-	
+ 	
 	function xset_vidblain_setlevel(name, line, wildcards)
 		local x = tonumber(wildcards.level)
 		SetVariable("mcvar_xset_vidblain_level", x)
@@ -2499,19 +2499,22 @@
 	
 --	[[ SQL execution ]]
 	function RunSql(name, line, wildcards)
-		local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
-		local db = assert(sqlite3.open(worldPath .. ".db"))
+		--local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
+		--local db = assert(sqlite3.open(worldPath .. ".db"))
+		local worldPath = GetInfo(66) .. "/worlds/plugins/"
+		local db = assert(sqlite3.open(worldPath .. "sddb.db"))
 		local index = 0
 		local sql = wildcards.sql
-		ColourNote("#FF5000", "", "running :" .. sql)
+		ColourNote("#00C040", "", "\nrunning sql: " .. sql)
 		for row in db:nrows(sql) do
 			index = index + 1
 			print("----------- record " .. index .. " -----------" )
-			--tprint(row)
+			tprint(row)
 	--		print (serialize.save ("row", row))
 		end
 		db:close_vm()
 	end
+	
 	function ExecSql (name, line, wildcards)
 		local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
 		local db = assert(sqlite3.open(worldPath .. ".db"))
@@ -2714,8 +2717,9 @@
 				circle_color_2 = v2
 				text_color_1 = 0x80FFFF
 				text_color_2 = 0x102040
-				text = "GQ"
+				text = "gq"
 				tdx = 10
+				tdy = 6
 			else
 				text_color_1 = 0x80FFFF
 				text_color_2 = 0x102040
@@ -2800,7 +2804,6 @@
 		if (win_state == "min") then return	end
 		local list = main_target_list
 		local font = "cplist_" .. cp_gq_info_type
-		--local font_height = WindowFontInfo(win, font, 1)
 		local index = 0
 		local resize_tag = 15
 		local targ_list_top = 59
@@ -2827,10 +2830,7 @@
 			local hs_top = (targ_list_top + ((index-1) * win_line_space))
 			local hs_right = (hs_left + WindowTextWidth(win, font, link))
 			local hs_bottom = (hs_top + win_line_space)
-			--print(index .. ": " .. hs_top .. ", " .. hs_bottom)
-			--if (hs_right < 0) then hs_right = 0 end
 			if (hs_right > win_width - 5) then hs_right = (win_width - 5) end
-			--if (hs_bottom < 0) then hs_bottom = 0 end
 			WindowText(win, font, link, hs_left, hs_top+1, 0, 0, color, false)
 			if (hs_bottom > win_height - resize_tag) then		-- Prevent list item's hotspot from overlapping with the resize tag
 				if (hs_right > win_width - resize_tag - 5) then 
@@ -3026,9 +3026,9 @@
 		CallPlugin(plugin_id_z_order,"boostMe", win)
 	end
 	
-	function do_trg_cp_complete(name, line, wildcards) 
-			mouseup_drag(0, "hsCLR")
-	end
+	--function do_trg_cp_complete(name, line, wildcards) 
+	--		mouseup_drag(0, "hsCLR")
+	--end
 	
 	function dragmove(flags, hotspot_id)
 		if bit.band(flags, 0x20) == 0 then
@@ -3132,14 +3132,14 @@
 	end
 	
 -- Internal Utilities
-	function convert_color_format(s)
-		local str=s
-		local con="0x"
+	function convert_color_format(s)	-- convert color format from #FF8800 (used by colournote, etc.) to 0x0088FF (used for window text)
+		local con = "0x"
 		for i=1,3,1 do
-			con = con .. string.sub(str, 8-(2*i), 9-(2*i))
+			con = con .. string.sub(s, 8-(2*i), 9-(2*i))
 		end
 		return con
 	end
+	
 	function copytable(t)
 		local new_t = {}
 		table.foreachi(t, 
@@ -3153,15 +3153,17 @@
 		ColourNote(c1, "", txt)
 	end
 	
-	function dbcheck(code)
-		if code ~= sqlite3.OK and    -- no error
-			code ~= sqlite3.ROW and   -- completed OK with another row of data
-			code ~= sqlite3.DONE then -- completed OK, no more rows
+	function dbcheck(code, query)
+		if (code ~= sqlite3.OK) and    -- no error
+		   (code ~= sqlite3.ROW) and   -- completed OK with another row of data
+		   (code ~= sqlite3.DONE) then -- completed OK, no more rows
 			local err = db:errmsg ()  -- the rollback will change the error message
+			err = err.."\n\nCODE: "..code.."\nQUERY: "..query.."\n"
 			db:exec("ROLLBACK")      -- rollback any transaction to unlock the database
 			error (err, 2)            -- show error in caller's context
 		end
 	end
+	
 	function fixbool(b)
 		if b then
 			return 1
@@ -3177,6 +3179,7 @@
 			return "NULL"
 		end
 	end
+	
 	function int(d)
 		if not tonumber(d) then
 			return
@@ -3221,6 +3224,7 @@
 		str = string.gsub(str, "[^%w%s()_-]", "")
 		return str
 	end
+	
 	function spairs(t, f)
 		local a = {}
 		for n in pairs(t) do 
@@ -3238,6 +3242,7 @@
 		end
 		return iter
     end
+ 	
 	function split(line, delim)
 		local result = {}
 		local index = 1
@@ -3247,15 +3252,58 @@
 		end
 		return result
 	end
-	
+ 	
 	function trim(s)
 		return s:match'^()%s*$' and '' or s:match'^%s*(.*%S)'
 	end
-
+	
+	function xset_areadata()
+		local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
+		local db = assert(sqlite3.open(worldPath .. ".db"))
+		local sql = "SELECT uid, name FROM areas"
+		local ar = { }
+		local def = areaDefaultStartRooms	-- default start rooms
+		local csr = areaStartRooms	-- xset marked start rooms
+		local alr = area_range	-- area level range table
+		--local worldPath = GetInfo(66) .. "/worlds/plugins/"
+		--local db = assert(sqlite3.open(worldPath .. "sddb.db"))
+		local index = 0
+		ColourNote("#00C040", "", "\nrunning sql: " .. sql)
+		for row in db:nrows(sql) do
+			index = index + 1
+			local a = row.uid
+			local an = row.name
+			local q = (def[a].noquest == true) and "0" or "1"
+			local d = def[a].start
+			local c = (csr[a] ~= nil) and ((csr[a].roomid ~= d) and csr[a].roomid or "-1") or "-1"
+			ar[index] = { arid=a, area_name=an, def_startroom=d, cur_startroom=c, questable=q, minlvl="-1", maxlvl="-1", lock="-1" }
+		end
+		db:close_vm()
+		
+		for i,v in ipairs (ar) do
+			local a = v.arid
+			local an = v.area_name
+			if (alr[an] ~= nil) then
+				v.minlvl = alr[an].min
+				v.maxlvl = alr[an].max
+			end
+		end		
+		
+		--	if (def[v.arid].noquest == true) then
+		--		v.questable = "0"
+		--	else
+		--		v.questable = "1"
+		--	end
+		--end
+		tprint(ar)
+		--tprint(areaStartRooms)
+		--tprint(alr)
+	end
+	
 ]]>
 </script>
 <triggers>
-<!-- GQUEST OPERATIONS-->
+<!-- Gquest operations -->
 	<trigger match="^Quest Name\.\.\.\.\.\.\.\.\.: \[ Global quest # (?<gq_id>\d{1,4}) \]$"
 		script="gq_info_quest_name"
 		name="trg_gq_info_quest_name" group="gq"
@@ -3341,45 +3389,7 @@
 		name="trg_gq_no_active_players" group="trg_gq_stat"
 		enabled="y"	regexp="y" sequence="100" keep_evaluating="y" send_to="12" > </trigger>		
 
-<!-- area indexing triggers -->
-	<trigger match="^              \[ Listing all areas in range 1 to 300 \]$"
-		script="area_index_start"
-		name="trg_area_index_start" group="AreaIndex"
-		enabled="y" regexp="y" sequence="100" omit_from_output="y" send_to="12" >
-			<send>	EnableTrigger("trg_area_index_gag_headers", true)
-					EnableTrigger("trg_area_index_gag_header_lines", true)
-					EnableTrigger("trg_area_index_line", true)
-					EnableTrigger("trg_area_index_gag_lock_means", true)
-					EnableTrigger("trg_area_index_end", true) </send> </trigger>
-
-	<trigger match="^From To   Lock  Keyword          Area Name                      $"
-		name="trg_area_index_gag_headers" group="AreaIndex"
-		enabled="n" regexp="y" sequence="100" omit_from_output="y" send_to="12" >
-			<send>	EnableTrigger("trg_area_index_gag_headers", false) </send> </trigger>
-	
-	<trigger match="^---- ---- ----  ---------------  ------------------------------$"
-		name="trg_area_index_gag_header_lines" group="AreaIndex"
-		enabled="n" regexp="y" sequence="100" omit_from_output="y" send_to="12" >
-			<send>	EnableTrigger("trg_area_index_gag_header_lines", false) </send> </trigger>
-
-	<trigger match="^\s+(?<min>\d+)\s+(?<max>\d+)\s+(?<lock>\d+)?\s+?(?<arid>[0-9a-z]+?)\s+(?<areaName>[A-Z].+?)$"
-		script="area_index_line"
-		name="trg_area_index_line" group="AreaIndex"
-		enabled="n" regexp="y" sequence="100" omit_from_output="y" send_to="12" > </trigger>
-
-	<trigger match="^'Lock' means you cannot enter until you are that level or higher\.$"
-		name="trg_area_index_gag_lock_means" group="AreaIndex"
-		enabled="n" regexp="y" sequence="100" omit_from_output="y" send_to="12" >
-			<send>	EnableTrigger("trg_area_index_gag_lock_means", false) </send> </trigger>
-
-	<trigger match="^---------------------------------------------------------------$"
-		script="area_index_end"
-		name="trg_area_index_end" group="AreaIndex"
-		enabled="n" regexp="y" sequence="100" omit_from_output="y" keep_evaluating="y" send_to="12" >
-			<send>	EnableTrigger("trg_area_index_line", false)
-					EnableTrigger("trg_area_index_end", false) </send> </trigger>
-
-<!-- CAMPAIGN INFO PROCESSING -->
+<!-- CAMPAIGN OPERATIONS -->
 	<trigger match="^Level Taken\.{8}: \[\s+(?<level>[1-2]?\d{1,2}) \]$"
 		script="cp_info_level_taken"
 		name="trg_cp_info_level_taken" group="trg_campaign"
@@ -3453,12 +3463,12 @@
 	<trigger match="^You have (?:(?:\d+ days?, )?\d+ hours? and )?\d+ minutes? left to finish this campaign\.$"
 		script="player_is_on_cp"
 		name="trg_player_is_on_cp" group="trg_cp_2"
-		enabled="y" regexp="y" sequence="100" keep_evaluating="y" send_to="12" > </trigger>
+		enabled="n" regexp="y" sequence="100" keep_evaluating="y" send_to="12" > </trigger>
 		
 	<trigger match="^You have (?:(?:\d+ hours?, )?\d+ minutes? and )?\d+ seconds? left to finish this campaign\.$"
 		script="player_is_on_cp"
 		name="trg_player_is_on_cp_2" group="trg_cp_2"
-		enabled="y" regexp="y" sequence="100" keep_evaluating="y" send_to="12" > </trigger>
+		enabled="n" regexp="y" sequence="100" keep_evaluating="y" send_to="12" > </trigger>
 
 	<trigger match="^You may take (?:a campaign at this level|another campaign)\.$"
 		script="cp_check_can_get_new_cp"
@@ -3567,8 +3577,46 @@
 		script="player_level_up"
 		name="trg_noexp_raise_level"
 		enabled="y" regexp="y" sequence="100" keep_evaluating="y"> </trigger>
+
+<!-- AREA INDEX PROCESS -->
+	<trigger match="^              \[ Listing all areas in range 1 to 300 \]$"
+		script="area_index_start"
+		name="trg_area_index_start" group="AreaIndex"
+		enabled="y" regexp="y" sequence="100" omit_from_output="y" send_to="12" >
+			<send>	EnableTrigger("trg_area_index_gag_headers", true)
+					EnableTrigger("trg_area_index_gag_header_lines", true)
+					EnableTrigger("trg_area_index_line", true)
+					EnableTrigger("trg_area_index_gag_lock_means", true)
+					EnableTrigger("trg_area_index_end", true) </send> </trigger>
+
+	<trigger match="^From To   Lock  Keyword          Area Name                      $"
+		name="trg_area_index_gag_headers" group="AreaIndex"
+		enabled="n" regexp="y" sequence="100" omit_from_output="y" send_to="12" >
+			<send>	EnableTrigger("trg_area_index_gag_headers", false) </send> </trigger>
 	
-<!-- page size -->
+	<trigger match="^---- ---- ----  ---------------  ------------------------------$"
+		name="trg_area_index_gag_header_lines" group="AreaIndex"
+		enabled="n" regexp="y" sequence="100" omit_from_output="y" send_to="12" >
+			<send>	EnableTrigger("trg_area_index_gag_header_lines", false) </send> </trigger>
+
+	<trigger match="^\s+(?<min>\d+)\s+(?<max>\d+)\s+(?<lock>\d+)?\s+?(?<arid>[0-9a-z]+?)\s+(?<areaName>[A-Z].+?)$"
+		script="area_index_line"
+		name="trg_area_index_line" group="AreaIndex"
+		enabled="n" regexp="y" sequence="100" omit_from_output="y" send_to="12" > </trigger>
+
+	<trigger match="^'Lock' means you cannot enter until you are that level or higher\.$"
+		name="trg_area_index_gag_lock_means" group="AreaIndex"
+		enabled="n" regexp="y" sequence="100" omit_from_output="y" send_to="12" >
+			<send>	EnableTrigger("trg_area_index_gag_lock_means", false) </send> </trigger>
+
+	<trigger match="^---------------------------------------------------------------$"
+		script="area_index_end"
+		name="trg_area_index_end" group="AreaIndex"
+		enabled="n" regexp="y" sequence="100" omit_from_output="y" keep_evaluating="y" send_to="12" >
+			<send>	EnableTrigger("trg_area_index_line", false)
+					EnableTrigger("trg_area_index_end", false) </send> </trigger>
+	
+<!-- PAGE SIZE -->
 	<trigger match="^You currently display ([0-9]+) lines per page\.|You do not page long messages\.$"
 		script="capture_page_size"
 		name="trg_capture_page_size"
@@ -3715,7 +3763,7 @@
 <!-- xmapper  -->
 	<alias	match="^(?:xm|xmap|xmapper) move (?<roomid>\d+|-1)(?: (?<speed>run|walk))?$"
 			script="move_trigger"
-				enabled="y" regexp="y" sequence="95" ignore_case="y" > </alias>
+			enabled="y" regexp="y" sequence="95" ignore_case="y" > </alias>
 		
 	<alias	match="^xm(?:\ {(?<mob>[^\}]+)\})? (?<loc>.+)$"
 			script="map_area"
@@ -3726,7 +3774,7 @@
 			enabled="y" regexp="y" sequence="99" ignore_case="y" > </alias>
 
 <!-- xset commands -->
-	<alias  match="^xset (?:index areas?|area index)$"
+	<alias  match="^xset (?:index areas|area index)$"
 			script="area_index_process"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 			
@@ -3744,6 +3792,10 @@
 
 	<alias  match="^xset speed ?(?<speed>run|walk)?$"
 			script="set_speed"
+			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
+			
+	<alias  match="^xset areadata$"
+			script="xset_areadata"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 			
 <!-- xset window commands -->
