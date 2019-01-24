@@ -30,7 +30,7 @@
 	require "serialize"
 	require "tprint"
 	require "wait"
-	local current_sd_version = "Search & Destroy v3.0 (rel-1.0.0)"
+	local current_sd_version = "Search & Destroy v3.0 (rel-1.0.1)"
 	local plugin_id_gmcp_handler = "3e7dedbe37e44942dd46d264"		-- easier to remember the var names than the plugin id's
 	local plugin_id_gmcp_mapper = "b6eae87ccedd84f510b74714"
 	local plugin_id_z_order = "462b665ecb569efbf261422f"
@@ -1007,7 +1007,7 @@
 	function player_start_new_cp()	-- called by line "good luck on your campaign" when starting new cp
 		player_on_cp = "yes"
 		cpstatus_can_get_new_cp = "no"
-		cp_info_level = gmcp("char.status.level")
+		cp_info_level = tonumber(gmcp("char.status.level"))
 		if (noexp_onoff == "on") and (auto_noexp_tnl > 0) then
 			ColourNote("#FF5000", "#000000", "Search and Destroy: Turning 'noexp' OFF (you have started a new CP)")
 			set_noexp("off")
@@ -1224,8 +1224,8 @@
 		--win_circle_readout = "gq"
 		local t = gq_info_list
 		local gq_type = cp_gq_info_type_check(t)
-		cp_info_level_taken = gmcp("char.status.level")	-- room target builder will crash without a sensible value here.  Just use current player level.
-		print("gq type detection: "..gq_type.." (level " .. cp_info_level_taken .. ")\n")
+		cp_info_level = tonumber(gmcp("char.status.level"))	-- room target builder will crash without a sensible value here.  Just use current player level.
+		print("gq type detection: "..gq_type.." (level " .. cp_info_level .. ")\n")
 		cp_gq_info_type = gq_type
 		SetVariable("mcvar_gq_info_type", gq_type)
 		xg_draw_window()
@@ -1337,7 +1337,7 @@
 			list = cp_check_list
 		elseif (cp_gq == "gq") then
 			list = gq_check_list
-			cp_info_level_taken = gmcp("char.status.level")
+			cp_info_level = tonumber(gmcp("char.status.level"))
 		else
 			print("main target list build error - function arg can only be 'cp' or 'gq'")
 			return
@@ -1402,7 +1402,7 @@
 		local t = {}
 		local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
 		local db = assert(sqlite3.open(worldPath .. ".db"))
-		local level_taken = tonumber(cp_info_level) or gmcp("char.status.level")
+		local level_taken = tonumber(cp_info_level) or tonumber(gmcp("char.status.level"))
 		for i,v in ipairs (list) do
 			local results_found = false
 			local select = string.format(sqlr, fixsql(v.loc))
