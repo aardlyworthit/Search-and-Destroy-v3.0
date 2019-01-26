@@ -1,3 +1,10 @@
+# Search and Destroy v3.0 (rel-1.0.1) — 26 Jan 2019
+Fixed multiple issues with gquest.  A special thanks to my friend and colleague... well, I guess I can't very well name names, can I?  But assuredly, you know who you are, and my gratitude goes with you.  Point being:  Gquest works great now.  The only minor update to that will be some sort of quantity indicator since gquest mobs are usually in multiples rather than just one, as in campaigns.
+
+And the next Big Thing will be a full mob database, which I am already developing and testing.
+
+Stay tuned, my ninjas.  Greater greatness is coming your way, and you will lead at the cutting, bleeding edge.  So be it and let it be so!
+
 # Search and Destroy v3.0 (rel-1.0.0) — 1 Jan 2019
 Note: Make sure to uninstall version 2.  Version 3 uses a different plugin id, so it's possible to have both installed at once.  
 
