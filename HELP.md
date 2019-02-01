@@ -1,4 +1,5 @@
-# Search and Destroy v3.0 instruction manual
+# Search and Destroy v3.0 instruction manual 
+## See end-notes for additional information
 
 ### Auto-hunt
 - '**ah** \<**mob**\>' starts autohunt, which will hunt your mob and move you to the next room until you reach your mob.  Navigators can autohunt through portals.  It does not work with mapper cexits - autohunt uses the output of the hunt skill which is limited to cardinal directions only (and portals, for navigators).
