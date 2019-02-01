@@ -1,9 +1,11 @@
 # Search and Destroy v3.0 (rel-1.0.1) — 26 Jan 2019
-Fixed multiple issues with gquest.  A special thanks to my friend and colleague... well, I suppose I can't very well name names, can I?  That's unfortunate, because you deserve all the credit.  But assuredly:  You know who you are, and my gratitude goes with you.  Thank you for all of this.
+Fixed multiple issues with gquest.  Special thanks to a friend:  You know who you are, and my gratitude goes with you.  Thanks  for the problem reports and generally bearing me while I nailed it all down.
 
-For the rest of you, the point is:  Gquest works great now.  The only minor update to that will be some sort of quantity indicator since gquest mobs are usually in multiples rather than just one, in contrast to campaigns.  But for that minor detail, gquest S&D works baller like Rodman, my ninjas.
+For everyone else, the point is:  Gquest is working great.  The only minor update would be some sort of quantity indicator since gquest mobs are usually in multiples rather than just one, in contrast to campaigns.  But for that, S&D gquest does it baller like Rodman.  But, without most of the crazy, I hope.
 
-Stay tuned, ninjas, and warriors (even you, RoqueWarrior).  The engines are started, running, and have accelerated to full operational power.  Three, two, one: Now!  Reheat and takeoff!  Full ahead and full speed!
+Stay tuned, ninjas.  And warriors too (even you, RoqueWarrior).  The engines are started, running, and accelerating to full operational power.  Three, two, one, *now*:  Light up the reheat and takeoff!
+
+Full ahead and full speed!
 
 # Search and Destroy v3.0 (rel-1.0.0) — 1 Jan 2019
 Note: Make sure to uninstall version 2.  Version 3 uses a different plugin id, so it's possible to have both installed at once.  
