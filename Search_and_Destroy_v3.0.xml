@@ -1782,6 +1782,7 @@
 	end
 	
 	function qw_match(name, line, wildcards)
+		qw.index = qw.index or 1
 		local mob = string.lower(trim(wildcards.mobname))
 		local room = wildcards.roomname
 		local parts = split(string.lower(short_mob_name), "[^ ]+")
