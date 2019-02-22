@@ -11,7 +11,7 @@ The update to S&D v3.0 is as follows:
 
 - In gquest, the output window will have quantity indicators of the form n\*mobname.
 
-When you look at it like that it doesn't really look like much of an update, but from the standpoint of effort invested and hassle incurred it most definitely is.  One thing I should like to clear up, just in case, is that S&D 3.0 is aimed more at providing gq capability "at all", as opposed to what one might call "gquest superiority".  It handles gquest exactly as it handles campaigns, and as anyone with experience knows, proper area knowledge absolutely is essential; and relying on S&D to know everything for you will be prone (indeed, doomed) to failure.
+When you look at it like that it doesn't really look like much of an update, but from the standpoint of effort invested and hassle incurred it most definitely is.  One thing I should like to clear up, just in case, is that S&D 3.0 is aimed more at providing gq capability "at all", as contrasted with what one might call "gquest superiority".  It handles gquest exactly as it handles campaigns, and as anyone with experience knows, proper area knowledge absolutely is essential; and relying on S&D to know everything for you will be prone (indeed, doomed) to failure.
 
 I wish you good fortune in the wars to come, ninjas.  Full ahead and full speed.
 
