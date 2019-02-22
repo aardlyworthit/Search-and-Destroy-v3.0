@@ -1,3 +1,21 @@
+# Search and Destroy v3.0 (rel-1.0.2) — 21 Feb 2019
+The update to S&D v3.0 is as follows:
+
+- Improved 'where' handling, especially where quick-where is concerned.  This will be most apparent in areas like FTII.  Basically, it will look for an exact match to your cp/gq mob and loop through 'where' until it finds it or quits due to hitting 40.mob, whichever happens first.
+
+- Rewrote execute_in_area from scratch, improving this most necessary of systems.
+
+- Reorganized a bunch of stuff pertaining to window refreshing, aimed at cutting some lag out of the overall process.  In particular, the action button draw routines were re-written from scratch.
+
+- Tightened overall gquest tracking and related things.
+
+- In gquest, the output window will have quantity indicators of the form n\*mobname.
+
+When you look at it like that it doesn't really look like much of an update, but from the standpoint of effort invested and hassle incurred it most definitely is.  One thing I should like to clear up, just in case, is that S&D 3.0 is aimed more at providing gq capability "at all", as opposed to what one might call "gquest superiority".  It handles gquest exactly as it handles campaigns, and as anyone with experience knows, proper area knowledge absolutely is essential; and relying on S&D to know everything for you will be prone (indeed, doomed) to failure.
+
+I wish you good fortune in the wars to come, ninjas.  Full ahead and full speed.
+
+
 # Search and Destroy v3.0 (rel-1.0.1) — 26 Jan 2019
 Fixed multiple issues with gquest.  Special thanks to a friend:  You know who you are, and my gratitude goes with you.  Thanks  for the problem reports and generally bearing me while I nailed it all down.
 
