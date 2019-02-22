@@ -1874,7 +1874,7 @@
 		end
 		if (found == false) then	-- not our line, keep looking
 			qw.index = qw.index + 1
-			if (qw.index < 41) then
+			if (qw.index < 101) then
 				Send(string.format("where %s.%s", qw.index, short_mob_name))
 				return
 			else
