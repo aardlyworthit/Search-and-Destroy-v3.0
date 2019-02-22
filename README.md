@@ -1,7 +1,7 @@
 # Search and Destroy v3.0 (rel-1.0.2) — 21 Feb 2019
 The update to S&D v3.0 is as follows:
 
-- Improved 'where' handling, especially where quick-where is concerned.  This will be most apparent in areas like FTII.  Basically, it will look for an exact match to your cp/gq mob and loop through 'where' until it finds it or quits due to hitting 40.mob, whichever happens first.
+- Improved 'where' handling, especially where quick-where is concerned.  This will be most apparent in areas like FTII.  Basically, it will look for an exact match to your cp/gq mob and loop through 'where' until it finds it or quits due to hitting 100.mob, whichever happens first.
 
 - Rewrote execute_in_area from scratch, improving this most necessary of systems.
 
