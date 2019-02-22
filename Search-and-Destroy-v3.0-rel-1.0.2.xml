@@ -160,7 +160,6 @@
 				r.maze = (string.match(r.details, "maze") == "maze") and "yes" or "no"
 				previousRoom = currentRoom or {}
 				currentRoom = { rmid = r.num, arid = r.zone, exits = r.exits, maze = r.maze } or {}
-				print("room: " .. currentRoom.rmid .. " (" .. previousRoom.rmid .. ")   maze: " .. currentRoom.maze)
 			elseif (text == "comm.quest") then	-- get quest info
 				local q = gmcp("comm.quest")
 				quest_status_gmcp(q)
