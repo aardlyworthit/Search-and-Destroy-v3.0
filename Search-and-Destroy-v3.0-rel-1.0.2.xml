@@ -1333,7 +1333,7 @@
 		end
 	end
 
-	function gqmsg_extended_time()
+	function gqmsg_extended_time(name, line, wildcards)
 		local gqid = wildcards.gq_id
 		if (gqid == gqid_joined) then
 			gq_extended = gqid
