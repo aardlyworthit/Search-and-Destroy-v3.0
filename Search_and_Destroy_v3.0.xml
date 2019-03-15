@@ -2490,12 +2490,12 @@
 	function xset_vidblain_setlevel(name, line, wildcards)
 		local x = tonumber(wildcards.level) or "check"
 		if (x == "check") then
-			ColourTell ("#FF5000", "", "\n'xset vidblain' portal level is currently ",
+			ColourTell ("#FF5000", "", "\n'xset vidblain' portal level is ",
 						"#00C040", "", xset_vidblain_level .. "\n")
 		else
 			xset_vidblain_level = x
 			SetVariable("mcvar_xset_vidblain_level", x)
-			ColourTell ("#FF5000", "", "\n'xset vidblain' portal level now set to ", 
+			ColourTell ("#FF5000", "", "\n'xset vidblain' portal level set to ", 
 						"#00C040", "", x .. "\n")
 		end
 	end
@@ -4009,7 +4009,7 @@
 			script="xset_vidblain"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 			
-	<alias  match="^xset vidblain (?<level>\d{1,3})$"
+	<alias  match="^xset vidblain level(?: (?<level>\d{1,3}))?$"
 			script="xset_vidblain_setlevel"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 
