@@ -1,3 +1,6 @@
+# Search and Destroy v3.0 (rel-1.0.3) — 13 Mar 2019 
+Good morning
+
 # Search and Destroy v3.0 (rel-1.0.2) — 21 Feb 2019
 The update to S&D v3.0 is as follows:
 
@@ -14,7 +17,6 @@ The update to S&D v3.0 is as follows:
 When you look at it like that it doesn't really look like much of an update, but from the standpoint of effort invested and hassle incurred it most definitely is.  One thing I should like to clear up, just in case, is that S&D 3.0 is aimed more at providing gq capability "at all", as contrasted with what one might call "gquest superiority".  It handles gquest exactly as it handles campaigns, and as anyone with experience knows, proper area knowledge absolutely is essential; and relying on S&D to know everything for you will be prone (indeed, doomed) to failure.
 
 I wish you good fortune in the wars to come, ninjas.  Full ahead and full speed.
-
 
 # Search and Destroy v3.0 (rel-1.0.1) — 26 Jan 2019
 Fixed multiple issues with gquest.  Special thanks to a friend:  You know who you are, and my gratitude goes with you.  Thanks  for the problem reports and generally bearing me while I nailed it all down.
@@ -114,12 +116,12 @@ Here is the outline of what's been done up to this point:
  - Fixed duplicate alias/trigger names, of which there were a few.  Duplicate pattern matches should all be merged and the excess 
    removed.
    
- - The plugin help text is not working.  It took up a lot of space and was making it harder to browse the file so I cut it out and 
-   put it in a text file for later.  Also removed the help button from the window because it wasn't really useful.  I'd like to 
-   redesign the window layout and features but am not sure what to do yet.
+ - The plugin help text is not working.  It took up a lot of space and was making it harder to browse the file 
+   so I cut it out and put it in a text file for later.  Also removed the help button from the window because it 
+   wasn't really useful.  I'd like to redesign the window layout and features but am not sure what to do yet.
    
- - Rearranged the XML code for aliases and triggers to be more compact, reducing file length by some 150 lines.  It makes it a lot 
-   easier to find and fix things.
+ - Rearranged the XML code for aliases and triggers to be more compact, reducing file length by some 150 lines.  
+   It makes it a lot easier to find and fix things.
  
  - Default start rooms for Ooku and Arboretum have been added.
  
