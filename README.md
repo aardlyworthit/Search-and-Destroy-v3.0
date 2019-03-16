@@ -1,7 +1,7 @@
 # Search and Destroy v3.0 (rel-1.0.3) — 13 Mar 2019 
 Good morning friends, ninjas, and everyone else, here are the latest updates and problem fixes:
 
- - Fixed the various issues with 'xcp' and 'xset vidblain'.  Depending on the situation, it could fail by not resuming speedwalk after passing through the dark portal, or by not doing qw/ht on arrival.  It should work correctly now but be on the lookout just in case.  Writing this was an adventure, to say the least.
+ - Fixed the various issues with 'xcp' and 'xset vidblain'.  Depending on the situation, it could fail by not resuming speedwalk after passing through the dark portal, or by not doing qw/ht on arrival at the destination.  It should work correctly now but be on the lookout just in case.  Writing this was an adventure, to say the least.
  
  - 'xset vidblain level' with no argument now shows your vidblain portal level.
  
