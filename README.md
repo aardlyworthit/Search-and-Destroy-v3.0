@@ -10,6 +10,8 @@ Good morning friends, ninjas, and everyone else, here are the latest updates and
  - Added a filter to deal with room names that include color codes.  The codes were being included in GMCP output and would occasionally interfere with things.
  
  - I added a command 'xset roomhist' which shows the last 200 rooms you've been in, with your current room being item 0.  It's not fleshed out and doesn't do anything else, but if anyone can suggest uses for it let me know.
+ 
+The discussion on gquest and whatnot is happening on the ideas board as we speak, so if you're one of the dozens who have sent me messages about how S&D has been a positive thing for you, now would be the time to post that.  Most of the feedback is coming from people who don't use S&D (currently, or at all), so if you it should be immediately clear which people don't know what they're talking about, which ones are Luddites, etc.  Seriously, if you like S&D please go post something about it.  Who knows where all of it will land, but for now enjoy the update and let me know if it acts up at all.
 
 # Search and Destroy v3.0 (rel-1.0.2) — 21 Feb 2019
 The update to S&D v3.0 is as follows:
