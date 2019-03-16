@@ -11,6 +11,8 @@ Good morning friends, ninjas, and everyone else, here are the latest updates and
  
  - I added a command 'xset roomhist' which shows the last 200 rooms you've been in, with your current room being item 0.  It's not fleshed out and doesn't do anything else, but if anyone can suggest uses for it let me know.
  
+ - The rest is the usual reworking of messy code, including my own earlier at this point, aimed at cutting things down and removing potential for errors as much as possible.
+ 
 The discussion on gquest and whatnot is happening on the ideas board as we speak, so if you're one of the dozens who have sent me messages about how S&D has been a positive thing for you, now would be the time to post that.  Most of the feedback is coming from people who don't use S&D (currently, or at all), so it should be clear enough who knows what they're talking about, who is a Luddite, etc.  Seriously, if you like S&D please go post something about it.  Who knows where all of it will land, but for now enjoy the update and let me know if it acts up at all.
 
 # Search and Destroy v3.0 (rel-1.0.2) — 21 Feb 2019
