@@ -5,7 +5,7 @@ Good morning, here are the latest updates and problem fixes:
  
  - 'xset vidblain level' with no argument now shows your vidblain portal level.
  
- - When a gq target requires multiple copies of a mob, the quantity numbers will update as they're killed, but gq check / target data only updates after you kill the last one.  The copies are usually near each other, so it makes sense to have 'xcp' retain its target and avoid the delay caused by unnecessary reloads.
+ - When a gq target requires multiple copies of a mob, the quantity numbers will update as they're killed, but gq check / target data will only update after you kill the last one.  The copies are usually near each other, so it makes sense to have 'xcp' retain its target and not delay things with unnecessary gq checks.
  
  - Added a filter to deal with room names that include color codes.  The codes were being included in GMCP output and would occasionally interfere with things.
  
