@@ -2003,7 +2003,6 @@
 	
  	function ht_complete(name, line, wildcards)
 		EnableTriggerGroup("AutoHunt", false)
-		ht_reset()
 		local s = short_mob_name
 		local ix = ht.index or 1
 		if (ix == 1) then		-- Don't use "1.mob"
@@ -2011,6 +2010,7 @@
 		else
 			Execute(string.format("qw %s.%s", ix, s))
 		end
+		ht_reset()
  	end
 	
  	function ht_abort(name, line, wildcards)
