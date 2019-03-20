@@ -1075,7 +1075,7 @@
 		if (player_on_gq == "no") then
 			xcp_retry_stat = 1
 			qw_reset(false)
-			main_target_list[xcp_index].color = "#404040"
+			--main_target_list[xcp_index].color = "#404040"
 			xcp_clear_target(true)
 			DoAfterSpecial(0.1, "do_cp_check()", 12)
 		end
@@ -1313,7 +1313,7 @@
 			else
 				qw_reset(false)
 				xcp_retry_stat = 1
-				main_target_list[xcp_index].color = "#404040"
+				--main_target_list[xcp_index].color = "#404040"
 				xcp_clear_target(true)
 				DoAfterSpecial(0.1, "do_gq_check()", 12)
 			end
