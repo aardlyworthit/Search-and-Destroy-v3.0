@@ -1,3 +1,28 @@
+# Search and Destroy v3.0 (rel-1.0.4) — 24 Mar 2019
+Bit of a fast turn around, but the last update had some issues I wanted to clear up, and as usual I was able to find some other things to work on as well.  At this point we're scraping the bottom of the barrel as far as adding new features goes, which is why the update notes have been a lot less exciting lately.  Here are today's changes:
+
+ - "Xcp", "go", and "nx" will no longer work while you're fighting, running, or otherwise occupied.  They're only useful 
+ if you're standing, not running, and out of combat.  Outside of that, they would basically just send spam that slows you down 
+ (and possibly looks silly to anyone who might be watching).  Now they just give a brief error message.
+ 
+ - The window link for your current mob is supposed to grey out on mob kill and disappear when the next cp or gq check arrives,
+ but, sometimes the xcp index would get lost. ("xcp 0", etc.)  In that case it would crash due to indexing a nil table item. 
+ It should now be fixed.
+ 
+ - I made the window layout a bit more compact and also changed the right side buttons a bit.  Hta and Clr are removed and replaced with Qw and Ht.  The Ref button is still the same and I don't know if I'm going to do anything with it yet.  I really
+want to overhaul the button layout so that more buttons will fit, but unsure of how to proceed.  Suggestions, anyone?
+ 
+ - Room cp's filter results based on areas' level ranges, but the stated levels range from kind-of ok, to fairly inaccurate, to
+ flat-out wrong.  For example, Aylor Academy is stated as 1 to 100.  But, it's mostly inaccessible after level 10, so obviously
+ level 100 is wrong.  In this case, the wrong level info resulted in level 80+ cp's generating useless links to Academy.  Most
+ area level ranges aren't nearly as fixable as this one, which needed a simple if check and nothing ele.  I'll look at
+ mobdeath/mobquest level data and adjust what I can, but dozens of areas have level ranges that are too far off, or just too
+ broad (although technically correct) to be used as filtering criteria.
+ 
+ - Room gq's now use the gquest level range for filtering.  Before this, room gq's would use your current level, which worked well enough but was technically wrong.  Let me know if this causes any problems for you.
+ 
+ - 
+
 # Search and Destroy v3.0 (rel-1.0.3) — 14 Mar 2019 
 Good morning friends, ninjas, and everyone else, here are the latest updates and problem fixes:
 
