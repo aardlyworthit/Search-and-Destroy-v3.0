@@ -1240,7 +1240,7 @@
 	function gq_info_level_range(name, line, wildcards)
 		local min = tonumber(wildcards.minlvl)
 		local max = tonumber(wildcards.maxlvl)
-		local eff = (min + max) / 2
+		local eff = math.floor((min + max) / 2)
 		gq_info_minlvl = min
 			SetVariable("mcvar_gq_info_minlvl", min)
 		gq_info_maxlvl = max
