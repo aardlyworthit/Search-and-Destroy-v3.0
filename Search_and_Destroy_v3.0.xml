@@ -3593,7 +3593,7 @@
 			<send>	EnableTrigger("trg_gq_info_quest_status", false) </send> </trigger>	
 
 	<trigger match="^Level range\.\.\.\.\.\.\.\.: \[\s+(?<minlvl>\d{1,3}) \] - \[\s+(?<maxlvl>\d{1,3}) \]$"
-		script=""
+		script="gq_info_level_range"
 		name="trg_gq_info_level_range" 		group="trg_gq"
 		enabled="n"	regexp="y" sequence="100" keep_evaluating="y" send_to="12" >
 			<send>	EnableTrigger("trg_gq_info_level_range", false) 
