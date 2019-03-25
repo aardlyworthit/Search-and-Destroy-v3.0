@@ -21,7 +21,12 @@ want to overhaul the button layout so that more buttons will fit, but unsure of 
  
  - Room gq's now use the gquest level range for filtering.  Before this, room gq's would use your current level, which worked well enough but was technically wrong.  Let me know if this causes any problems for you.
  
- - 
+ - More than half of the files loaded via "require" (at the beginning of the plugin's Lua section) were never referenced by
+ anything, so I removed them.
+ 
+As always, if anything gives trouble, let me know.  We're really scraping the bottom of the barrel as far as finding more things to work on; most of S&D has been rewritten and the major bugs all fixed.  I still want to redo area level filtering, and I feel like the window design could be redone to make the button interface more compact and easier to use.  Any suggestions or ideas on any of this, or if anything new should be added, let me know.
+
+Have a good one and I will see you next time!
 
 # Search and Destroy v3.0 (rel-1.0.3) — 14 Mar 2019 
 Good morning friends, ninjas, and everyone else, here are the latest updates and problem fixes:
