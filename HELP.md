@@ -7,7 +7,7 @@
 - Autohunt is very useful for navigating mazes, but may put you at risk of aggressive monsters.
 - Autohunt requires you to practice up your hunt for it to work.  If your skill is too low, autohunt will not work (it would be pointless as all the directions would be wrong).  Note that this has no effect on the hunt trick (see "ht" hunt trick below).
 
-### Campaign
+### Campaigns
 - '**xcp**' targets the first available mob on your cp list and gets possible locations. "Available" means living and location is known.  E.g. the first four mobs on your list are all dead, unknown, and/or both, "xcp" will ignore all of those and target the 5th mob.
 - '**xcp** \<*n*\>' targets the *n*th target on your main target list, dead or alive.  If dead, the MUD only ever gives the area name, even if the cp is room, so dead mobs are always handled as if the cp were area.
 - '**xcp 0**' clears the current target and its room search results.
@@ -17,10 +17,14 @@
 - Unknown mobs can't be targeted because the location isn't in your mapper db.  For area cp's, this means you've never been to the area at all.  For room cp's it means you haven't mapped any rooms with that name in any area — in most of these cases you'll have been to the area before, but haven't explored (i.e. mapped) every room.
 
 ### Gquest
-- When you join a gquest, you can do 'gq info' when the gq has started.  S&D will read the relevant gq data and update the display with links for the mobs.  From there, it handles just like a cp.
-- The commands for campaigns and gquest are the same (xcp, go, etc.).
-- 'cp info' will reload your campaign targets, and 'gq info' will reload your gq targets, allowing you to switch between them.  You must use 'info' and not 'check' because S&D doesn't cache the data when switching, and will need to re-process it from scratch.
-- S&D is unable to address various competition mechanics, including but not limited to: bad luck, bad repop timing, PvP ganking, other player intereference.
+- S&D handles gquest in the same way it handles campaigns.
+- The commands for gquest are the same as for campaigns (xcp, go, etc.).
+- After joining a gquest, 'gq info' displays information.  Once the gquest actually starts, S&D will go through 'gq info' and 'gq check' and generate targets as you'd expect.
+- The window display includes quantity indicators (e.g. kill 3 \* mobname).  For multiple-kill targets, S&D updates the quantity as you kill them, retaining target's data and only doing 'gq check' when the last one is killed.   
+- 'cp info' reloads your campaign targets, and 'gq info' reloads your gq targets, allowing you to switch between them.  You must use 'info' and not 'check' because S&D doesn't cache the data when switching, and will need to re-process it from scratch.
+- S&D correctly handles gquest extended time.
+- When the gquest ends, S&D reloads your cp targets (if applicable).
+- S&D is unable to address various competition mechanics, including but not limited to: bad luck, bad repops, PvP ganking, or other player intereference.
 
 ### "goto" command — run to room within area after getting search results
 - '**go**' runs to first room on the list returned by hunt trick / quick where.
@@ -43,6 +47,11 @@
 - '**nx-**' runs to previous room.
 - If you don't use 'go' first, 'nx' and 'nx-' will both run to the first room on the list (same as 'go').  It sometimes messes up and runs you to the second room in the list instead, so 'nx-' to go back.  Technically a bug and is fixable, but not without rewriting a bunch of crap and IMHO not worth it.
 
+### Quests
+- '**xq**' reloads your quest info.
+- Commands (go, nx, etc.) work as you'd expect.
+- There is no 'goto questor' and no 'default questor' setting; this is intentional.  If you can't even find the questor, you don't need S&D — you need to go through the Academy and learn basic gameplay.  
+
 ### "qw" (quick where) command:
 - '**qw**' gets results for your currently-targeted cp mob.
 - '**qw** \<**mobname**\>' gets results for given mobname.  Use this when the auto-guesser fails.
@@ -64,7 +73,8 @@
 
 ### Vidblain navigation
 - '**xset vidblain**' turns on Vidblain navigation, which allows one to quickly and easily cross the dark portal into Vidblain.  It also compensates for the portal's reality-distortion and uncertain transit vector and landing room, enabling straightforward travel to Vidblain destinations which would otherwise be tedious at best.
-- '**xset vidblain level** \<*level*\>' turns off Vidblain navigation when you reach the desired level, typically that of your lowest-level Vidblain area portal.  It does take tier into account, as well.  This is useful because it's always faster to use an area portal to get to Vidblain than to run via the dark portal.
+- '**xset vidblain level** \<*level*\>' turns off Vidblain navigation when you reach the desired level, typically that of your lowest-level Vidblain area portal.  It does account for tier.  This is useful because it's always faster to use an area portal to get to Vidblain than to run via the dark portal.  
+- '**xset vidblain level**' without a number will show the current level setting.
 
 ### Window commands - change font size, line spacing, etc.
 - The window can be dragged to a new location via the title bar, and resized via the widget at bottom right.  Right-clicking the title bar brings up a menu with collapse, expand, and send to front/back.
@@ -79,12 +89,16 @@
 - '**xm** \<**room name**\>**|all**' generates 'goto' links for all matching rooms in your database.  Note, there is no limit on how many results it can return, other than the size of your db — it will spam your screen with hundreds or thousands of results if you let it.
 
 ### Xtest commands
+- '**xtest areadata**' currently does very little.  It was previously used for testing.
+- '**xtest mcvars**' displays the list Mushclient variables S&D is using.
 - '**xtest roomhist**' displays the last 200 rooms you have been in.
 - '**xtest simulate cp**' displays a list of various mob names (alive, dead, unknown, etc.)
 
-## End-notes and additional information
+## Additional information and end notes
 - If your character is new (i.e. Tier 0) and single-class, be advised that S&D doesn't do well with level-locks.  This is especially true if your mapper database was built by a character not subject to level locks (i.e. a remort, or tier 1 and above).  The problem is especially bad if your mapper uses any clan or other short-cut exits.  Fixing this on my end is outside the scope of the S&D project, as one of the requirements and expectations is that you manage and optimize your mapper DB to your own individual needs.  Once you remort for the first time, level locks no longer apply and you will no longer experience this issue.
 
-- S&D is a tool.  As such, it can be used competently, or incompetently.  It is to your advantage to do your own mapping—by doing so, you have first-hand experience learning the area layouts and tricks.  Also, only you can know your individual needs; a DB supplied by someone else will almost certainly need a great deal of effort put into it to make it work correctly for you, often to the point that such effort will be comparable to simply mapping the areas for yourself.  Don't do yourself a disservice by cutting corners—I encourage you to do your own exploration and mapping.  It's a lot of fun, and really is the best way to learn and become experienced.
+- S&D is a tool.  As such, it can be used competently, or incompetently.  It is to your advantage to do your own mapping—by doing so, you have first-hand experience learning the area layouts, area quests, and other tricks.  Also, only you can know your individual needs; a DB supplied by someone else will probably need a lot of effort to make it work correctly for you, often to the point that it's faster to just map the areas yourself.  Don't do yourself a disservice by cutting corners—I encourage you to do your own exploration and mapping.  It's a lot of fun, and really is the best way to learn and become experienced.
 
-- S&D will not kill mobs for you, and in general a lot of effort and attention has gone into ensuring that the plugin is legal and does not violate Aardwolf's botting rules, or any other rules.  Modifying it to do anything automatically, especially anything that makes it look like a bot is a terrible idea and you ***should not*** do it.  There is very little to be gained by doing so, and the main thing you accomplish is placing your character in mortal jeopardy.  It is also highly disrespectful to the Immortals, and can potentially ruin *their* day too by forcing them to take action against you.  Please don't do that to them; they are good people and they deserve better.  Respect and follow the rules, always. 
+- S&D will not kill mobs for you, and in fact a lot of effort and attention has gone into ensuring that the plugin remains legal and does not violate Aardwolf's botting rules, or any other rules.  Modifying it to do anything automatically, especially anything that makes it look like a bot is a bad idea and I advise not doing it—the gains are less than you'd think and it puts your character at risk of getting nuked.  It's also highly disrespectful to the Immortals and can potentially ruin *their* day too by forcing them to take action against you.  Please don't do that to them; they are good people and they deserve better.  Respect and follow the rules, always.
+
+- My expectation is that Immortals will not yell at, interfere with, or otherwise confront players simply for using S&D.  For most players, that sort of confrontation is extremely offputting and in fact has resulted in some players quitting the game.  If you are a player and are confronted by an Immortal about your use of S&D please report it to me and I will investigate.  If you are an Immortal and have any concern about S&D please contact me so that I can rectify the problem.
