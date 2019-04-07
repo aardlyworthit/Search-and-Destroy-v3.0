@@ -1,6 +1,11 @@
 # Search and Destroy v3.0 instruction manual 
 ## \*\*\* See end-notes for additional information
 
+## Installation
+- Download the XML file and save it to your MUSHclient/worlds/plugins folder.  Don't use "save target as", that will download the wrong thing.  You want to use the "download" button and save the zip file, then extract the plugin XML file.
+- Go to Mushclient, hit shift-ctrl-P to bring up the plugin menu, click install, and open the S&D XML file.
+- If you are upgrading from an older S&D version (legacy, 1.3.x, or 2.0) use the plugin menu's "remove" button to uninstall those.  Version 3 uses a different plugin ID, making it possible to install it alongside the old versions.
+
 ### Auto-hunt
 - '**ah** \<**mob**\>' starts autohunt, which will hunt your mob and move you to the next room until you reach your mob.  Navigators can autohunt through portals.  It does not work with mapper cexits - autohunt uses the output of the hunt skill which is limited to cardinal directions only (and portals, for navigators).
 - '**aha**' and '**ah0**' will cancel an auto-hunt in progress.
