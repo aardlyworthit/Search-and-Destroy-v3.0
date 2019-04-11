@@ -1,5 +1,5 @@
 # Search and Destroy v3.0 (rel-1.0.5) — 11 Apr 2019
-Here is the latest update, courtesy of not only myself, but also others who think they have more control than I do.
+Here is the latest update.  As with the last few, it's mainly bugfixes and similar.  Let me know what you think.
 
  - fixed a crash occuring when running to a vidblain location while on a room cp.
  - mob keyword guesser should correcly handle mob names like "Starling, the real ninja".
