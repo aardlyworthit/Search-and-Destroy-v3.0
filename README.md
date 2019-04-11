@@ -26,7 +26,7 @@ want to overhaul the button layout so that more buttons will fit, but unsure of 
  - Room cp's filter results based on areas' level ranges, but the stated levels range from kind-of ok, to fairly inaccurate, to
  flat-out wrong.  For example, Aylor Academy is stated as 1 to 100.  But, it's mostly inaccessible after level 10, so obviously
  level 100 is wrong.  In this case, the wrong level info resulted in level 80+ cp's generating useless links to Academy.  Most
- area level ranges aren't nearly as fixable as this one, which needed a simple if check and nothing ele.  I'll look at
+ area level ranges aren't nearly as fixable as this one, which needed a simple if check and nothing else.  I'll look at
  mobdeath/mobquest level data and adjust what I can, but dozens of areas have level ranges that are too far off, or just too
  broad (although technically correct) to be used as filtering criteria.
  
