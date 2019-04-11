@@ -1,3 +1,14 @@
+# Search and Destroy v3.0 (rel-1.0.5) — 11 Apr 2019
+Here is the latest update, courtesy of not only myself, but also others who think they have more control than I do.
+
+ - fixed a crash occuring when running to a vidblain location while on a room cp.
+ - mob keyword guesser should correcly handle mob names like "Starling, the real ninja".
+ - apostrophes mid-mobname (e.g. in "gan'arg") are now removed from mob names
+ - Replaced "execute" function calls with the direct function for commands, e.g. xrun_to("", "", {destination="academy"}) instead of Execute("xrt academy")
+ - The mob in Necromancer's Guild "head necromancer's assistant" will always be targeted with its exact keywords "old mage assistant".  Rezit and others disagree that this change is needed.  I have more control.  That's all.
+ 
+Keep on keeping on, ninjas.  If there are any bugs or problems with this update please let me know.  Thanks for all your support!
+
 # Search and Destroy v3.0 (rel-1.0.4) — 24 Mar 2019
 Bit of a fast turn around, but the last update had some issues I wanted to clear up, and as usual I was able to find some other things to work on as well.  At this point we're scraping the bottom of the barrel as far as adding new features goes, which is why the update notes have been a lot less exciting lately.  Here are today's changes:
 
