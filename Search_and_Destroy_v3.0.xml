@@ -37,7 +37,7 @@
 	require "serialize"
 	require "tprint"
 	
-	local current_sd_version = "Search & Destroy v3.0 (rel-1.0.5)"
+	local current_sd_version = "Search & Destroy v3.0 (rel-1.0.6)"
 	local plugin_id_gmcp_handler = "3e7dedbe37e44942dd46d264"		-- easier to remember the var names than the plugin id's
 	local plugin_id_gmcp_mapper = "b6eae87ccedd84f510b74714"
 	local plugin_id_z_order = "462b665ecb569efbf261422f"
@@ -877,7 +877,6 @@
 	end
 
 --	[[ Guess mob keywords ]]
-
 	local gmkw_omit = {	["a"] = "",	["an"] = "", ["and"] = "", ["of"] = "", ["or"] = "", ["some"] = "", ["the"] = "" }
 	local gmkw_area_filters = {
 		["adaldar"]		= { { f= "^.*(el)vish (%a*%s?%a+)$",			g="%1 %2" }, },
@@ -905,15 +904,17 @@
 							{ f= "^sea (%a+ %a+)$", 					g="%1" }, }, }
 
 	local gmkw_exceptions = {
-		["necro"] 		= { ["head necromancer's assistant"] = { kw="old mage assist"}, }, }						
+		["necro"] 		= { ["head necromancer's assistant"] = { kw="old mage assist"}, }, }
 	
 	function gmkw(s, a)	-- guess mob keywords
 		if not s then return "" end
 		local ar = a or gmcp("room.info.zone") or -1
 		local guess
---		if gmkw_exceptions[ar][s] then			-- Is the mob listed as a keyword exception?  if so, get correct keyword(s) from the exception table instead of guessing. 
---			guess = gmkw_exceptions[ar][s].kw	-- Special thanks to Redryn for being obtuse and aggravating me enough to add this.  Dick.
---		else
+		if gmkw_exceptions[ar] then			-- Is the mob listed as a keyword exception?  if so, get correct keyword(s) from the exception table instead of guessing. 
+			if gmkw_exceptions[ar][s] then
+				guess = gmkw_exceptions[ar][s].kw	-- Special thanks to Redryn for being obtuse and aggravating me enough to add this.  Dick.
+			end
+		else
 			local omit = gmkw_omit
 			local s1 = {}
 			for w in string.gmatch(string.lower(s), "[^ ]+") do
@@ -936,7 +937,6 @@
 
 			local s3
 			if gmkw_area_filters[ar] then
-				tprint(gmkw_area_filters[ar])
 				for i,v in ipairs (gmkw_area_filters[ar]) do
 					s3 = string.gsub(s2, v.f, v.g)
 					if (s3 ~= s2) then
@@ -963,7 +963,7 @@
 			else										-- Sometimes all of the mob words get deleted, if so just use original input.  In theory, if we reached this step
 				guess = s or "gmkw error in stage 4"  	-- then the input is non-nil and I've never seen it be "" ... so, if it errors it means Lua is propagating a nil
 			end-- somehow or doing one of the other mickey mouse nonsense things that Lua likes to do.
-	--	end
+		end
 		return guess
 	end
 
@@ -4194,8 +4194,6 @@ function goto_number(name, line, wildcards)
 		
 	<alias	match="^xtest simulate cp(?: (?<type>ar?e?a?|ro?o?m?))?$"
 			script="simulate_cp"
-			enabled="y" regexp="y" sequence="1" ignore_case="y" > </alias>			
-			
-	
+			enabled="y" regexp="y" sequence="1" ignore_case="y" > </alias>
 </aliases>
 </muclient>
