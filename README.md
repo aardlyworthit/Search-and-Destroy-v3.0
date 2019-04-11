@@ -3,9 +3,9 @@ Here is the latest update, courtesy of not only myself, but also others who thin
 
  - fixed a crash occuring when running to a vidblain location while on a room cp.
  - mob keyword guesser should correcly handle mob names like "Starling, the real ninja".
- - apostrophes mid-mobname (e.g. in "gan'arg") are now removed from mob names
- - Replaced "execute" function calls with the direct function for commands, e.g. xrun_to("", "", {destination="academy"}) instead of Execute("xrt academy")
- - The mob in Necromancer's Guild "head necromancer's assistant" will always be targeted with its exact keywords "old mage assistant".  Rezit and others disagree that this change is needed.  I have more control than they do.  That's all.
+ - apostrophes mid-mobname (e.g. in "gan'arg") are now removed from mob names.
+ - Replaced "execute" function calls with the direct function for commands, e.g. xrun_to("", "", {destination="academy"}) instead of Execute("xrt academy").  Execute is quite slow, so calling the functions directly should improve speed/crispness a bit.
+ - The mob in Necromancer's Guild "head necromancer's assistant" will always be targeted with its exact keywords "old mage assistant".  Rezit and others disagree that this change is needed.  I have more control than they do—that's all.
  
 Keep on keeping on, ninjas.  If there are any bugs or problems with this update please let me know.  Thanks for all your support!
 
