@@ -37,7 +37,7 @@
 	require "serialize"
 	require "tprint"
 	
-	local current_sd_version = "Search & Destroy v3.0 (rel-1.0.4)"
+	local current_sd_version = "Search & Destroy v3.0 (rel-1.0.5)"
 	local plugin_id_gmcp_handler = "3e7dedbe37e44942dd46d264"		-- easier to remember the var names than the plugin id's
 	local plugin_id_gmcp_mapper = "b6eae87ccedd84f510b74714"
 	local plugin_id_z_order = "462b665ecb569efbf261422f"
@@ -65,6 +65,7 @@
 -- [[ main target data / current activity type ]]
 	local current_activity_type = "init"
 	local main_target_list = {}
+	local room_targets_ignored = {}
 	local area_room_type = "init"
 	
 -- [[ campaign data (cpmd) ]]
@@ -82,6 +83,7 @@
 	local gqid_joined = GetVariable("mcvar_gqid_joined") or "-1"
 	local gqid_started = GetVariable("mcvar_gqid_started") or "-1"
 	local gqid_extended = GetVariable("mcvar_gqid_extended") or "-1"
+	local player_on_gq = "no"
 	local gq_info_list = {}
 	local gq_check_list = {}
 	local last_gq_check = os.clock()	
@@ -91,7 +93,7 @@
 
 -- [[ gq status, etc.]]
 	
-	local player_on_gq = "no"
+	
 
 -- [[ current target data - cp, gq, quest ]]
 	local xcp_index = 0
@@ -103,8 +105,9 @@
 	local xcp_action_mode = GetVariable("mcvar_xcp_action_mode") or "qw"
 
 -- [[ goto/nx data ]]
+	local gotoArea = -1
+	local gotoIndex = 0
 	local gotoList = {}
-	local gotoIndex = 1
 	local next_room = -1
 
 -- [[ auto-hunt ]]
@@ -248,7 +251,7 @@
 		["arboretum"] 	= { start = "39100" }, 
 		["arena"] 		= { start = "25768" },
 		["arisian"] 	= { start = "28144" },
-		["ascent"] 		= { start = "43161" },
+		["ascent"] 		= { start = "43150" },
 		["astral"] 		= { start = "27882" },
 		["atlantis"] 	= { start = "10573" },
 		["autumn"] 		= { start = "13839" },
@@ -826,7 +829,7 @@
 			code = "obj = " .. GetVariable("mcvar_area_range")
 			assert(loadstring (code or "")) ()		
 			area_range_index = obj
-			Execute("cp info")
+			do_cp_info()
 		else
 			area_index_process()
 		end	
@@ -853,10 +856,11 @@
 			if (areaDefaultStartRooms[arid].noquest == true) then
 				-- do nothing, we don't want to add noquest areas to the index
 			else
-				if (arid == "sahuagin") then areaName = "The Abyssal Caverns of Sahuagin"
+				if     (arid == "sahuagin") then areaName = "The Abyssal Caverns of Sahuagin"
 				elseif (arid == "darkside") then areaName = "The Darkside of the Fractured Lands"
+				elseif (arid == "academy") then maxLvl = 10
+				elseif (arid == "sohtwo") then minLvL = 170 
 				end
-				if (arid == "academy") then maxLvl = 10 end
 				area_range_index[areaName] = { arid = arid, min = minLvl, max = maxLvl }	-- lock = levelLock }
 				
 			end
@@ -872,106 +876,116 @@
 		DoAfterSpecial(0.1, "cp info", sendto.execute)
 	end
 
---	[[ Guess mob keywords]]
+--	[[ Guess mob keywords ]]
+
 	local gmkw_omit = {	["a"] = "",	["an"] = "", ["and"] = "", ["of"] = "", ["or"] = "", ["some"] = "", ["the"] = "" }
 	local gmkw_area_filters = {
 		["adaldar"]		= { { f= "^.*(el)vish (%a*%s?%a+)$",			g="%1 %2" }, },
+		
 		["bonds"]		= { { f= "^(.*[bgry]%a+) dragon$",				g="%1" }, },
+		
 		["citadel"]   	= {	{ f= "^([bgjlmsv]%a+) ([ap]r%a+[el]) .+$",	g="%1 %2" }, },
+		
 		["ddoom"]   	= {	{ f= "^(T%a+) sun%a+ (leader)$",			g="%1 %2" },
 							{ f= "^([LY]%a+i) [sg]%a+ warrior$",		g="%1" }, },	
+		
 		["hatchling"] 	= {	{ f= "^(%a+) dragon (egg)$", 				g="%1 %2" },
 							{ f= "^(%a+) dragon (hatchling)$", 			g="%1 %2" },
 							{ f= "^(%a+ %a+) dragon whelp$", 			g="%1" },
 							{ f= "^(%a+) dragon (whelp)$", 				g="%1 %2" }, },
+							
 		["sirens"] 		= {	{ f= "^miss ([%a']+)%s?(%a*).*%a$", 		g="%1 %2" }, },
+		
 		["sohtwo"]		= { { f= "^(evil) %a+",							g="%1" },
 							{ f= "^(good) %a+",							g="%1" }, },
+		
 		["verume"]		= {	{ f= "^lizardman (temple %a+)$", 			g="%1" }, },
+		
 		["wooble"]		= {	{ f= "^sea (%a+)$", 						g="%1" },
-							{ f= "^sea (%a+ %a+)$", 					g="%1" }, },	}
-				
+							{ f= "^sea (%a+ %a+)$", 					g="%1" }, }, }
+
+	local gmkw_exceptions = {
+		["necro"] 		= { ["head necromancer's assistant"] = { kw="old mage assist"}, }, }						
+	
 	function gmkw(s, a)	-- guess mob keywords
-		if not s then return -1 end
+		if not s then return "" end
 		local ar = a or gmcp("room.info.zone") or -1
-		local omit = gmkw_omit
-		local s1 = {}
-		for w in string.gmatch(string.lower(s), "[^ ]+") do
-			w = string.gsub(w, "%p%-", "")
-			w = string.gsub(w, ",", "")
-			w = string.gsub(w, "%.", "")
-			w = string.gsub(w, "'s$", "")
-			w = string.gsub(w, "[!?]+$", "")
-			table.insert(s1, w)
-		end
-		local s2
-		for i,v in ipairs (s1) do
-			if omit[v] then
-				-- do nothing
-			else
-				s2 = (s2 == nil) and v or s2 .. " " .. v
-			end
-		end	
-		local s3
-		if gmkw_area_filters[ar] then
-			for i,v in ipairs (gmkw_area_filters[ar]) do
-				s3 = string.gsub(s2, v.f, v.g)
-				if (s3 ~= s2) then
-					break
-				end
-			end
-		else
-			s3 = s2
-		end
-		s3 = string.gsub(s3, "-", " ")
-		local s4 = {}
-		for w in string.gmatch(s3, "[^ ]+") do
-			table.insert(s4, w)
-		end
 		local guess
-		local len1 = #(s4[1])
-		local len2 = #(s4[#s4]) or 0
-		if (#s4 > 1) then	-- mob name has multiple words
-			local x,y = math.random(4,6), math.random(4,6)
-			guess = string.sub(s4[1], 1, x) .. " " .. string.sub(s4[#s4], 1, y)
-		elseif (#s4 == 1) then	-- mob name has one word
-			local x = math.random(1 + round_banker(len1*0.5), len1)
-			guess = string.sub(s4[1], 1, x)
-		else										-- Sometimes all of the mob words get deleted, if so just use original input.  In theory, if we reached this step
-			guess = s or "gmkw error in stage 4"  	-- then the input is non-nil and I've never seen it be "" ... so, if it errors it means Lua is propagating a nil
-		end											-- somehow or doing one of the other mickey mouse nonsense things that Lua likes to do.
+--		if gmkw_exceptions[ar][s] then			-- Is the mob listed as a keyword exception?  if so, get correct keyword(s) from the exception table instead of guessing. 
+--			guess = gmkw_exceptions[ar][s].kw	-- Special thanks to Redryn for being obtuse and aggravating me enough to add this.  Dick.
+--		else
+			local omit = gmkw_omit
+			local s1 = {}
+			for w in string.gmatch(string.lower(s), "[^ ]+") do
+				w = string.gsub(w, "%p%-", "")
+				w = string.gsub(w, ",", "")
+				w = string.gsub(w, "%.", "")
+				w = string.gsub(w, "'s$", "")
+				w = string.gsub(w, "[!?]+$", "")
+				table.insert(s1, w)
+			end
+
+			local s2
+			for i,v in ipairs (s1) do
+				if omit[v] then
+					-- do nothing
+				else
+					s2 = (s2 == nil) and v or s2 .. " " .. v
+				end
+			end	
+
+			local s3
+			if gmkw_area_filters[ar] then
+				tprint(gmkw_area_filters[ar])
+				for i,v in ipairs (gmkw_area_filters[ar]) do
+					s3 = string.gsub(s2, v.f, v.g)
+					if (s3 ~= s2) then
+						break
+					end
+				end
+			else
+				s3 = s2
+			end
+			s3 = string.gsub(s3, "-", " ")
+			
+			local s4 = {}	
+			for w in string.gmatch(s3, "[^ ]+") do
+				table.insert(s4, w)
+			end
+			local len1 = #(s4[1])
+			local len2 = #(s4[#s4]) or 0
+			if (#s4 > 1) then	-- mob name has multiple words
+				local x,y = math.random(4,6), math.random(4,6)
+				guess = string.sub(s4[1], 1, x) .. " " .. string.sub(s4[#s4], 1, y)
+			elseif (#s4 == 1) then	-- mob name has one word
+				local x = math.random(1 + round_banker(len1*0.5), len1)
+				guess = string.sub(s4[1], 1, x)
+			else										-- Sometimes all of the mob words get deleted, if so just use original input.  In theory, if we reached this step
+				guess = s or "gmkw error in stage 4"  	-- then the input is non-nil and I've never seen it be "" ... so, if it errors it means Lua is propagating a nil
+			end-- somehow or doing one of the other mickey mouse nonsense things that Lua likes to do.
+	--	end
 		return guess
 	end
 
---	[[ Mob database / mastermind process ]]
-	local get_mobsub_sql =  
-		"SELECT * " ..
-		"FROM mobsubs " ..
-		"WHERE mobname like %s AND areaid = %s "		
-
-	local mobsub_cache = {}
-	
-	function get_mobsub(mob, arid)
-		--TODO - cache the result of a found hit in a table
---		local key = 
-		local db = sqlite3.open(GetInfo(66) .. "WinkleWinkle_MobSubs.db")
-		local select = string.format (get_mobsub_sql, fixsql(mob), fixsql(arid))
-		for row in db:nrows(select) do
-			local row_mobsub = {
-				mob = row.mobname,
-				arid = row.areaid,
-				sub = row.subname,
-				noHunt = row.nohunt,
-				noWhere = row.nowhere,
-				noScan = row.noscan,
-				rmid = row.roomid,
-				comment = row.comment }
-			db:close_vm()
-			return row_mobsub
+--	[[ Detect campaign (or gquest) type - area or room ]]	
+	function area_room_type_check(list)
+		local areaCount = 0
+		local roomCount = 0
+		local ar_rm
+		for i,v in ipairs (list) do
+			if areaNameXref[v.loc] then
+				areaCount = areaCount + 1
+			else
+				roomCount = roomCount + 1
+			end
 		end
-		db:close_vm()
-		return nil
-	end	
+		if (areaCount >= roomCount) then
+			ar_rm = "area"
+		else
+			ar_rm = "room"
+		end
+		return ar_rm
+	end
 
 --	[[ Quest target process ]]
 	function xq_command()	-- enables 'xq' command (reload quest info)
@@ -1025,68 +1039,11 @@
 		end
 	end
 	
---	[[ general cp status process / functions ]]
-	function player_start_new_cp()	-- called by line "good luck on your campaign" when starting new cp
-		player_on_cp = "yes"
-		can_get_new_cp = "no"
-		cp_info_level = tonumber(gmcp("char.status.level"))
-		if (noexp_onoff == "on") and (anex_tnl_cutoff > 0) then
-			ColourNote("#FF5000", "#000000", "Search and Destroy: Turning 'noexp' OFF (you have started a new CP)")
-			anex_set_noexp("off")
-		end
-		do_cp_info()
-	end  
-	
-	function player_level_up()
-		can_get_new_cp = "yes"
-		xg_draw_window()
-	end
-
-	function player_not_on_cp()
-		player_on_cp = "no"
-		EnableTriggerGroup ("trg_campaign", false)
-		area_room_type = "none"
-		cp_info_level = "0"
-			SetVariable("mcvar_cp_level_taken", "0")
-		cp_info_list = {}
-		main_target_list = {}
-		cp_check_list = {}
-		xcp_index = 0
-		xg_draw_window()
-	end
- 	
-	function cp_check_can_get_new_cp()
-		can_get_new_cp = "yes"
-		anex_can_get_new_cp()
-		xg_draw_window()
-	end
-	
-	function cp_check_cannot_get_new_cp()
-		can_get_new_cp = "no"
-		anex_must_level_new_cp()
-		xg_draw_window()
-	end	
-	
-	function can_player_get_new_cp()
-		return (can_get_new_cp == "yes") and true or false
-	end
-	
-	function cp_mob_killed()
-		if (player_on_gq == "no") then
-			xcp_retry_stat = 1
-			qw_reset(false)
-			if main_target_list[xcp_index] then
-				main_target_list[xcp_index].color = "#404040"
-			end
-			xcp_clear_target(true)
-			DoAfterSpecial(0.1, "do_cp_check()", 12)
-		end
-	end
-	
 --	[[ "cp info" process path ]]
 	function do_cp_info()
 		cp_info_list = {}
 		main_target_list = {}
+		room_targets_ignored = {}
 		xcp_index = 0
 		EnableTrigger("trg_cp_info_level_taken", true)
 		EnableTrigger("trg_cp_info_targets", true)
@@ -1095,9 +1052,9 @@
 	end
 	
 	function cp_info_level_taken(name, line, wildcards)
-		local level = tonumber(wildcards.level)
-		cp_info_level = level
-		SetVariable("mcvar_cp_level_taken", level)
+		local x = tonumber(wildcards.level)
+		cp_info_level = x
+		SetVariable("mcvar_cp_level_taken", x)
 	end
 	
 	function cp_info_line(name, line, wildcards)
@@ -1117,26 +1074,8 @@
 		xg_draw_window()
 		DoAfterSpecial(0.1, [[ do_cp_check() ]], sendto.script)
 	end
-	
-	function area_room_type_check(list)
-		local areaCount = 0
-		local roomCount = 0
-		local ar_rm
-		for i,v in ipairs (list) do
-			if areaNameXref[v.loc] then
-				areaCount = areaCount + 1
-			else
-				roomCount = roomCount + 1
-			end
-		end
-		if (areaCount >= roomCount) then
-			ar_rm = "area"
-		else
-			ar_rm = "room"
-		end
-		return ar_rm
-	end
 
+--	[[ "cp check" process path ]]	
 	function do_cp_check()
 		local time_check = os.clock()					-- prevent double cp checks from different plugins
 		if ((time_check - last_cp_check) < 1.0) then
@@ -1163,18 +1102,88 @@
 		player_on_cp = "yes"
 		win_circle_readout = "cp"
 		build_main_target_list("cp", area_room_type)
-		if (xcp_retry_stat == 2) then
+		if (xcp_retry_stat == 2) then						-- About xcp_retry_stat:
 			if (xcp_index == 0) or (xcp_index == 1) then
-				xcp_retry_stat = 0
-				xcp_noarg()
-			else
-				xcp_retry_stat = 0
-				Execute("xcp " .. xcp_index)
-			end
+				xcp_retry_stat = 0							-- after killing cp mob, it's possible to 'xcp' after tables are cleared,
+				xcp_noarg()									-- but before they're refreshed, which would cause 'xcp' to fail with the
+			else											-- message "no data yet".  Instead, cp_mob_killed sets a flag that does
+				xcp_retry_stat = 0							-- two things: 1) tells 'xcp' to silently abort, 2) tells cp_check_end to
+				xcp_arg("", "", {index=xcp_index}) 			-- do xcp again (with or without arg), which works normally now that
+			end												-- table data is available.
 		end
-		xcp_retry_stat = 0
+		xcp_retry_stat = 0				--Execute("xcp " .. xcp_index)				
+	end
+
+--	[[ general cp status functions ]]
+	function player_start_new_cp()	-- called by line "good luck on your campaign" when starting new cp
+		player_on_cp = "yes"
+		can_get_new_cp = "no"
+		local x = tonumber(gmcp("char.status.level"))
+		cp_info_level = x
+		win_circle_readout = "cp"
+		xg_draw_window()
+		if (noexp_onoff == "on") and (anex_tnl_cutoff > 0) then
+			ColourNote("#FF5000", "#000000", "Search and Destroy: Turning 'noexp' OFF (you have started a new CP)")
+			anex_set_noexp("off")
+		end
+		do_cp_info()
+	end  
+	
+	function cp_mob_killed()
+		if (player_on_gq == "no") then
+			xcp_retry_stat = 1
+			qw_reset(false)
+			if main_target_list[xcp_index] then
+				main_target_list[xcp_index].color = "#404040"
+			end
+			xcp_clear_target(true)
+			DoAfterSpecial(0.1, "do_cp_check()", 12)
+		end
+	end
+		
+	function player_level_up()
+		can_get_new_cp = "yes"
+		xg_draw_window()
 	end
 	
+	function player_is_on_cp()
+		player_on_cp = "yes"
+	end
+	
+	function player_not_on_cp()
+		player_on_cp = "no"
+		EnableTriggerGroup ("trg_campaign", false)
+		cp_info_level = "0"
+			SetVariable("mcvar_cp_level_taken", "0")
+		cp_info_list = {}
+		cp_check_list = {}
+		if (player_on_gq == "yes") then
+			-- do nothing, we don't want to clear our gq info
+		else
+			main_target_list = {}
+			room_targets_ignored = {}
+			area_room_type = "none"
+			xcp_index = 0
+			xg_draw_window()
+		end
+	end
+ 	
+	function cp_check_can_get_new_cp()
+		can_get_new_cp = "yes"
+		anex_can_get_new_cp()
+		xg_draw_window()
+	end
+	
+	function cp_check_cannot_get_new_cp()
+		can_get_new_cp = "no"
+		anex_must_level_new_cp()
+		xg_draw_window()
+	end	
+	
+	function can_player_get_new_cp()
+		return (can_get_new_cp == "yes") and true or false
+	end
+
 --	[[ Gquest beginning event messages: declare, join, start ]]
 	function gqmsg_declared(name, line, wildcards)
 		gqid_declared = wildcards.gq_id
@@ -1210,6 +1219,7 @@
 		if (gqid_joined ~= "-1") then
 			xcp_clear_target(false)
 			main_target_list = {}
+			room_targets_ignored = {}
 			gq_info_list = {}
 			EnableTrigger("trg_gq_info_quest_name", true)
 			SendNoEcho("gq info " .. gqid_joined)
@@ -1223,10 +1233,9 @@
 		local gqid = wildcards.gq_id
 		if (gqid == gqid_joined) then
 			EnableTrigger("trg_gq_info_quest_status", true)
-			player_on_gq = "yes"
+			player_is_on_gq()
 		else
 			print("gq info name fail")
-			player_not_on_gq()
 		end
 	end
 	
@@ -1259,8 +1268,7 @@
 	end
 	
 	function gq_info_end()
-		player_on_gq = "yes"	-- more redundancy.  gq's are a pain
-		win_circle_readout = "gq"
+		player_is_on_gq()	-- more redundancy.  gq's are a pain
 		area_room_type = area_room_type_check(gq_info_list)
 		cp_info_level = tonumber(gmcp("char.status.level"))	-- room target builder will crash without a sensible value here.  Just use current player level.
 		print("gq type detection: " .. area_room_type .. " (level " .. cp_info_level .. ")\n")
@@ -1291,21 +1299,21 @@
 	end
 	
 	function gq_check_end()
-		player_on_gq = "yes"	-- if you can get gq check, you must be in it.  Adds redundancy in case plugin/data get reset somehow.
-		win_circle_readout = "gq"
+		player_is_on_gq()
 		build_main_target_list("gq", area_room_type)
-		if (xcp_retry_stat == 2) then
-			if (xcp_index == 0) or (xcp_index == 1) then
-				xcp_retry_stat = 0
-				xcp_noarg()
-			else
-				xcp_retry_stat = 0
-				Execute("xcp " .. xcp_index)
-			end
+		if (xcp_retry_stat == 2) then						-- About xcp_retry_stat:
+			if (xcp_index == 0) or (xcp_index == 1) then	
+				xcp_retry_stat = 0							-- after killing gq mob, it's possible to 'xcp' after tables are cleared,
+				xcp_noarg()									-- but before they're refreshed, which would cause 'xcp' to fail with the
+			else											-- message "no data yet".  Instead, gq_mob_killed sets a flag that does
+				xcp_retry_stat = 0							-- two things: 1) tells 'xcp' to silently abort, 2) tells gq_check_end to
+				Execute("xcp " .. xcp_index)				-- do 'xcp' again (with or without arg), which works normally now that
+			end												-- table data is available.
 		end
 		xcp_retry_stat = 0
 	end
 
+--	[[ Gquest general status functions ]]	
 	function gq_mob_killed()
 		if main_target_list[xcp_index] then
 			local x = tonumber(main_target_list[xcp_index].qty) - 1
@@ -1327,7 +1335,6 @@
 					print_target_links(main_target_list)
 				else
 					qw_reset(false)
-					--main_target_list[xcp_index].color = "#404040"
 					xcp_clear_target(false)
 				end
 			end
@@ -1377,19 +1384,19 @@
 	
 	function player_is_on_gq()
 		player_on_gq = "yes"
-		xg_draw_window()
+		win_circle_readout = "gq"
 	end
-	
+
 	function player_not_on_gq()
 		EnableTriggerGroup("trg_gq", false)
 		EnableTriggerGroup("trg_gqmsg_2", false)
 		EnableTrigger("trg_gqmsg_extended_time", false)
 		player_on_gq = "no"
-		
 		area_room_type = "none"
 		gq_info_list = {}
 		gq_check_list = {}
 		main_target_list = {}
+		room_targets_ignored = {}
 		
 		gqid_declared = "-1"
 			SetVariable("mcvar_gqid_declared", gqid_declared)
@@ -1423,7 +1430,7 @@
 		if (ar_rm == "area") then
 			main_target_list = build_area_targets(cp_gq, sqla)	
 		elseif (ar_rm == "room") then
-			main_target_list = build_room_targets(cp_gq, sqlr, sqla)
+			main_target_list, room_targets_ignored = build_room_targets(cp_gq, sqlr, sqla)
 		elseif (ar_rm == "none") then	-- should never be called but who knows
 			print("main_target_list build error - tried to run while on " .. cp_gq .. " but area/room type is 'none'.")
 		end
@@ -1485,7 +1492,7 @@
 	end
 	
 	function build_room_targets(cp_gq, sqlr, sqla)
-		local t, list = {}, {}
+		local t, ig, list = {}, {}, {}
 		local level_taken
 		if (cp_gq == "cp") then
 			list = cp_check_list
@@ -1520,10 +1527,10 @@
 						if (level_taken >= area_min_lvl) and (level_taken <= (area_max_lvl+10)) then	-- limit results to sensible level range.
 							table.insert(t, {
 								mob = v.mob,
-								roomid = row.roomid,
 								arid = row.arid,
-								qty = v.qty,
+								roomid = row.roomid,
 								roomName = row.roomName,
+								qty = v.qty,
 								is_dead = dead,--v.is_dead,
 								color = cx,	--((v.is_dead == false) and "#E0E0E0" or "#484848"),
 								minlvl = area_min_lvl,
@@ -1531,10 +1538,20 @@
 								link_type = lt,	--((v.is_dead == false) and "room" or "area"),	-- deals with dead mobs when area contains roomnames same as area name e.g. Aardington Estate
 								index = #t+1,
 								ord = v.ord	} )
-						else	-- area containing roomname is outside level ranges
-							local link = string.format(" **Ignoring due to level : %s in '%s' (%s) [%s-%s]", v.mob, row.roomName, row.arid, area_min_lvl, area_max_lvl)
-							Hyperlink("xmapper move " .. row.roomid, link, "Move to room " .. row.roomid, "#FF4000", "", 0)
-							print("")
+						else	
+							table.insert(ig, {	-- build table of search results for areas out of your level range. 
+								mob = v.mob,	-- Usually invalid, but valid links can wind up here if area's level range is too broad, or wrong.
+								arid = row.arid,
+								roomid = row.roomid,
+								roomName = row.roomName,
+								qty = v.qty,
+								is_dead = dead,
+								color = "#002460",
+								minlvl = area_min_lvl,
+								maxlvl = area_max_lvl,
+								link_type = "ignored",
+								index = #ig+1,
+								ord = v.ord } )
 						end
 					end
 				end
@@ -1559,11 +1576,14 @@
 		for i,v in ipairs (t) do
 			v.kw = gmkw(v.mob, v.arid)
 		end
-		return t
+		return t, ig
 	end
 	
 --	[[ Display target links in MUD window ]]
 	function print_target_links(list)
+		if (#room_targets_ignored > 0) then
+			print_room_links_ignored()
+		end
 		if (#list > 0) then
 			ColourNote("#808080", "", string.rep("-", 90))
 			for i,v in ipairs (list) do
@@ -1595,6 +1615,17 @@
 		end
 	end
 
+	function print_room_links_ignored()
+		local ig = room_targets_ignored
+		ColourNote("#808080", "", string.rep("-", 90))
+		for i,v in ipairs (ig) do			
+			local link = string.format(" ** Ignoring due to level: %s - %5s '%s' (%s) [%s-%s]", v.mob, v.roomid, v.roomName, v.arid, v.minlvl, v.maxlvl)
+			Hyperlink("xmapper move " .. v.roomid, link, "Move to room " .. v.roomid, "#002460", "", 0)
+			print("")
+		end
+	end
+
+	
 -- [[ "xcp" command ]]
 	function xcp_noarg()	-- xcp with no argument given, so find the first available mob (alive, location known) and go to it.
 		local t = main_target_list
@@ -1634,7 +1665,7 @@
 		elseif (cp_list[index].link_type == "unknown") then -- or (cp_list[index].link_type == "unknown_room") then	-- abort if unknown
 			ColourNote("#FF5000", "", "\nSearch and Destroy: 'xcp' aborted - no mapper data for target (#" .. index .. ").\n")
 		else	-- everything is in order, so go to mob.
-			local state = gmcp("char.status.state")
+			local state = char_state
 			if (state == "3") then
 				xcp_index = index
 				xg_draw_window()
@@ -1652,8 +1683,9 @@
 			local t = main_target_list[index]
 			local ri = current_room
 			local action = xcp_action_mode
-			gotoList = {}
+			gotoArea = -1
 			gotoIndex = 1
+			gotoList = {}
 			if (t ~= nil) and (ri.rmid ~= nil) then
 				full_mob_name = t.mob
 				short_mob_name = t.kw
@@ -1668,7 +1700,8 @@
 						ColourNote("#FF5000", "", "Xcp action is off - no additional action\n")
 					end
 					if (ri.arid ~= t.arid) then	-- if you're not in target area, xrunto target area.
-						Execute("xrt " .. t.arid)
+						--Execute("xrt " .. t.arid)
+						xrun_to("", "", {destination=t.arid})
 					end
 				else	-- Room cp:  get target room from mapper, but don't move yet.  "go" takes you to room.
 					search_rooms(t.roomName .. "|" .. t.arid, "area", t.kw)
@@ -1676,11 +1709,8 @@
 			else
 				ColourNote("#FF5000", "", "No item exists, or data is busy")
 			end
-		elseif (xcp_retry_stat == 1) then
-			print("return: xcp retry stat 1")
+		else
 			xcp_retry_stat = 2
-		elseif (xcp_retry_stat == 2) then
-			print("return: xcp retry stat 2")
 		end
 	end
 	
@@ -1688,6 +1718,7 @@
 		short_mob_name = -1
 		full_mob_name = -1
 		xcp_index = 0
+		gotoArea = -1
 		gotoIndex = 0
 		gotoList = {}
 		if (bool == true) then
@@ -1729,11 +1760,11 @@
 			SendNoEcho("areas 1 299 keywords " .. arid)
 		else
 			ColourNote("#FF5000", "", "X-runto: " .. arid .. ", room ID: " .. rmid .. " (" .. start_room_type .. ")\n")
-			goto_room(rmid, arid)
+			goto_room_id(rmid, arid)
 		end	
 	end
 	
-	function goto_room(rmid, arid)
+	function goto_room_id(rmid, arid)	-- go to specific room id (do not confuse with goto_number, see below)
 		local ri = current_room
 		local rmid = rmid
 		local arid = arid or getAreaFromRoomId(rmid)
@@ -1747,32 +1778,34 @@
 			do_mapper_goto(rmid)
 		end
 	end
-		
-	function goto_number(name, line, wildcards)
-		local state = gmcp("char.status.state")
+
+function goto_number(name, line, wildcards)
+		local state = char_state
 		if (state == "3") then
 			gotoIndex = tonumber(wildcards.id) or 1
 			if gotoList[gotoIndex] then
 				if (tonumber(gotoList[gotoIndex]) == nil) then
-					Execute("xrt " .. gotoList[gotoIndex])
-					Execute("qs")
+					xrun_to("", "", {destination=gotoList[gotoIndex]})
+					quick_scan()
 				else
 					next_room = gotoList[gotoIndex]
-					goto_room(gotoList[gotoIndex])
-					Execute("qs")
+					goto_room_id(gotoList[gotoIndex])
+					quick_scan()
 				end
 			else
-				ColourNote("#FF5000", "", "Goto next (go) aborted - No destination yet.")
+				ColourNote("#FF5000", "", "Goto room result (go) aborted - No destination yet.")
 			end
 		elseif (state == "8") then
 			ColourNote("#FF5000", "", "\nNot while you're fighting!")
 		elseif (state == "12") then
 			ColourNote("#FF5000", "", "\nYou are already running!")
+		else
+			ColourNote("#FF5000", "", "\nGoto room result (go):  Can't do that now - you must be standing and ready.")
 		end
 	end
 	
 	function goto_next(name, line, wildcards)
-		local state = gmcp("char.status.state")
+		local state = char_state
 		if (state == "3") then
 			if (next_room == nil) or (next_room == "") or (not tonumber(next_room)) then
 				ColourNote("#FF5000", "", "Goto next (nx) aborted - No data yet.")
@@ -1784,7 +1817,7 @@
 					ColourNote("#00C040", "", "Next room (nx) - " .. gotoIndex .. " of " .. #gotoList)
 					next_room = gotoList[gotoIndex]
 					do_mapper_goto(next_room)
-					Execute("qs")
+					quick_scan()
 				else
 					ColourNote("#FF5000", "", "Goto next (nx) aborted - No more rooms.")
 				end
@@ -1793,11 +1826,13 @@
 			ColourNote("#FF5000", "", "\nNot while you're fighting!")
 		elseif (state == "12") then
 			ColourNote("#FF5000", "", "\nYou are already running!")
+		else
+			ColourNote("#FF5000", "", "\nGoto next room (nx):  Can't do that now - you must be standing and ready.")
 		end
 	end	
 	
 	function goto_previous(name, line, wildcards)
-		local state = gmcp("char.status.state")
+		local state = char_state
 		if (state == "3") then
 			if (next_room == nil) or (next_room == "") or (not tonumber(next_room)) then
 				ColourNote("#FF5000", "", "Goto previous (nx-) aborted - No data yet.")
@@ -1809,7 +1844,7 @@
 					ColourNote("#00C040", "", "Previous room (nx-) - " .. gotoIndex .. " of " .. #gotoList)
 					next_room = gotoList[gotoIndex]
 					do_mapper_goto(next_room)
-					Execute("qs")
+					quick_scan()
 				else
 					ColourNote("#FF5000", "", "Goto previous (nx-) aborted - No more rooms.")
 				end
@@ -1818,12 +1853,14 @@
 			ColourNote("#FF5000", "", "\nNot while you're fighting!")
 		elseif (state == "12") then
 			ColourNote("#FF5000", "", "\nYou are already running!")
+		else
+			ColourNote("#FF5000", "", "\nGoto previous room (nx-):  Can't do that now - you must be standing and ready.")
 		end
 	end	
-
+	
 --	[[ Vidblain navigation ]]
 	function vidblain_nav(rmid, arid)
-		local st = gmcp("char.status.state")
+		local st = char_state
 		vidblain_nav_tbl = { i=0, j=0, rmid=rmid, arid=arid, stat=st }
 		EnableTimer("execute_in_area_timer", false)
 		EnableTimer("vidblain_nav_timer", true)
@@ -1833,7 +1870,7 @@
 
 	function vidblain_nav_tick()
 		local ri = current_room
-		local st = gmcp("char.status.state")
+		local st = char_state
 		local vnt = vidblain_nav_tbl
 		local eiat = execute_in_area_tbl
 		if (ri.arid ~= nil) and (st ~= nil) then
@@ -1841,8 +1878,9 @@
 				vnt.i = vnt.i + 1
 				if (vnt.i > 200) then
 					EnableTimer("vidblain_nav_timer", false)
+					xcp_clear_target(true)
 					ColourNote("#FF5000", "", "** vidblain nav:  abort timer - took too long to get to destination.")
-					vidblain_nav_tbl = { i=0, j=0, rmid="", arid="", stat=1 }					
+					vidblain_nav_tbl = { i=0, j=0, rmid="", arid="", stat=1 }
 				end
 			else  -- arrived in vidblain proper
 				if (st == "3") and (st == vnt.stat) then  -- monitor char state for 3 ticks, if stable, start EIA timer and run to target area 
@@ -1863,9 +1901,14 @@
 --	[[ Execute in Area ]]	
 	function execute_in_area(arid, func)	-- id is the process or function calling this one.
 		local ri = current_room
-		local st = gmcp("char.status.state")
-		local func = func or function() end
-		execute_in_area_tbl = { i=0, j=0, arid=arid, f=func, stat=st }
+		local st = char_state
+		local fn
+		if (type(func) == "function") then
+			fn = func
+		else
+			fn = function () end
+		end
+		execute_in_area_tbl = { i=0, j=0, arid=arid, f=fn, stat=st }
 		if (ri.arid == arid) then	-- in target area
 			func()
 			execute_in_area_tbl = { i=0, j=0, arid="", f="", stat=1 }
@@ -1879,13 +1922,14 @@
 	
 	function execute_in_area_tick()
 		local ri = current_room
-		local st = gmcp("char.status.state")
+		local st = char_state
 		local eiat = execute_in_area_tbl
 		if (ri.arid ~= nil) and (st ~= nil) then
 			if (ri.arid ~= eiat.arid) then
 				eiat.i = eiat.i + 1
 				if (eiat.i > 200) then
 					EnableTimer("execute_in_area_timer", false)
+					xcp_clear_target(true)
 					ColourNote("#FF5000", "", "** execute-in-area:  abort timer - took too long to get to destination.")
 					execute_in_area_tbl = { i=0, j=0, arid="", f="", stat=1 }
 				end
@@ -1895,6 +1939,7 @@
 					if (eiat.j > 3) then
 						EnableTimer("execute_in_area_timer", false)
 						eiat.f()
+						--eiat.f()
 					end
 				else
 					eiat.stat = st
@@ -2061,7 +2106,6 @@
 	end
 	
  	function ht_continue()
-		
 		local s = short_mob_name
 		local ix = (ht.index + 1) or 1
 		do_hunt_trick(ix, s)
@@ -2069,15 +2113,9 @@
 	
  	function ht_complete(name, line, wildcards)
 		EnableTriggerGroup("AutoHunt", false)
-
 		local s = short_mob_name
 		local ix = ht.index or 1
-
-		if (ix == 1) then		-- Don't use "1.mob"
-			Execute(string.format("qw %s", s))
-		else
-			Execute(string.format("qw %s.%s", ix, s))
-		end
+		qw_arg("", "", {index=ix, mob=s})
 		ht_reset()
  	end
 	
@@ -2088,7 +2126,7 @@
 	end
 
 -- [[ quick scan, quick kill ("kk") ]]	
-	function quick_scan(name, line, wildcards)
+	function quick_scan()
 		if (short_mob_name == nil) or (short_mob_name == "") then
 			SendNoEcho("scan")
 		else
@@ -2100,7 +2138,7 @@
 		if (short_mob_name == nil) or (short_mob_name == "") or (short_mob_name == "-1") then
 			ColourNote("#FF5000", "", "\nSearch and Destroy: 'Quick-kill' has no target.  Use 'ht', 'qw', or 'xcp' to select a target.\n")
 		else
-			Execute(quick_kill_command .. " " .. short_mob_name)
+			Send(quick_kill_command .. " " .. short_mob_name)
 		end
 	end
 	
@@ -2130,7 +2168,7 @@
 		"WHERE r.name <> %s " ..	-- room
 		"AND r.name LIKE %s " .. 	-- like
 		"AND (%s = 'all' OR (a.name = %s OR r.area = %s)) " .. -- area_id x3
-		"ORDER BY Area, DisplayOrder DESC "
+		"ORDER BY area, DisplayOrder DESC "
 			
 	function search_rooms(room_name, searchType, fullMobName)
 		if (room_name == nil) or (room_name == "") then
@@ -2159,18 +2197,11 @@
 			--if string.sub(room,1,1) == "\"" and string.sub(room,-1) == "\"" then
 			--	like = string.sub(room,2,-2)
 			--end
-			local select = string.format(search_rooms_sql, 
-				fixsql(room), 
-				fixsql(arid), 
-				fixsql(arid), 
-				fixsql(arid), 
-				fixsql(room), 
-				fixsql(like), 
-				fixsql(arid), 
-				fixsql(arid), 
-				fixsql(arid))
-			--local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
-			--local db = assert(sqlite3.open(worldPath .. ".db"))
+			local select = string.format(search_rooms_sql,	fixsql(room), 
+															fixsql(arid), fixsql(arid), fixsql(arid), 
+															fixsql(room), 
+															fixsql(like), 
+															fixsql(arid), fixsql(arid), fixsql(arid))
 			local db = assert(sqlite3.open(aard_mapper_database))
 			local results = {}
 			local roomid_list = {}
@@ -2193,6 +2224,8 @@
 	end
 	
 	function search_rooms_results(results)	-- Display list of 'go' links from hunt-trick, quick-where, etc.
+		gotoArea = -1
+		gotoIndex = 1
 		gotoList = {}
 		mapper_area_index = 0
 		local last_area = ""
@@ -2204,6 +2237,7 @@
 					local areaLine = string.format("~~~ %2d   %s", mapper_area_index, v.arid)
 					Hyperlink("go " .. mapper_area_index, areaLine, "go to area " .. v.arid, "silver", "", 0)
 					gotoList[mapper_area_index] = v.arid
+					gotoArea = v.arid
 					mapper_area_index = mapper_area_index + 1
 				else
 					local areaLine = string.format("~~~   %s", v.arid)
@@ -2825,19 +2859,17 @@
 	
 --	[[ Former plugin - S&D GUI ]]
 	local window_fonts = {
-		["title"]	= { f="Consolas",			 s=10, 				b=false, 	i=false, 	u=false },
-		["bt1"]	 	= { f="Segoe",				 s=10, 				b=true, 	i=false, 	u=false },
-		["bt2"] 	= { f="Segoe",				 s=10, 				b=true, 	i=false, 	u=false },
-		["circ1"] 	= { f="Consolas",			 s=11, 				b=false, 	i=false, 	u=false },
-		["circ2"]	= { f="Consolas",			 s= 9, 				b=false, 	i=false, 	u=false },
-		["cplevel"] = { f="Consolas",			 s=11, 				b=false, 	i=false, 	u=false },
-		["noexp"]	= { f="Consolas",			 s=11, 				b=false, 	i=false, 	u=false }, --noexp tnl
-		["noexp2"]	= { f="Consolas",			 s= 9, 				b=false, 	i=false, 	u=false },
+		["title"]	= { f="Consolas",				 s=10, 				b=false, 	i=false, 	u=false },
+		["bt1"]	 	= { f="Segoe",					 s=10, 				b=true, 	i=false, 	u=false },
+		["bt2"] 	= { f="Segoe",					 s=10, 				b=true, 	i=false, 	u=false },
+		["circ1"] 	= { f="Consolas",				 s=11, 				b=false, 	i=false, 	u=false },
+		["circ2"]	= { f="Consolas",				 s= 9, 				b=false, 	i=false, 	u=false },
+		["cplevel"] = { f="Consolas",				 s=11, 				b=false, 	i=false, 	u=false },
+		["noexp"]	= { f="Consolas",				 s=11, 				b=false, 	i=false, 	u=false }, --noexp tnl
+		["noexp2"]	= { f="Consolas",				 s= 9, 				b=false, 	i=false, 	u=false },
 		["cplist_area"] = { f="Lucida Sans Unicode", s=win_font_size, 	b=false, 	i=false, 	u=false },
 		["cplist_room"] = { f="Segoe", 				 s=win_font_size, 	b=false, 	i=false, 	u=false } }
 	
-
-
 	function xg_create_window()
 		if (win_init == false) then
 			win_init = true
@@ -2966,17 +2998,17 @@
 		local cx1,cy1 = left, top
 		local cx2,cy2 =  (left + width), (top+height)
 		local bgcolor = 0x000000
-		local g1, g2 = 0x30C000, 0x004000	-- green shade
-		local r1, r2 = 0x0040F0, 0x000080	-- orange shade
-		local u1, u2 = 0xC08800, 0x403000	-- blue shade
-		local v1, v2 = 0xC000C0, 0x400040	-- violet shade
+		local g1, g2 = 0x30C000, 0x004000	-- green, circle
+		local r1, r2 = 0x0040F0, 0x000080	-- red, circle
+		local u1, u2 = 0xC08800, 0x403000	-- blue, circle
+		local v1, v2 = 0xC000C0, 0x400040	-- violet, circle
 		local circle_color_1, circle_color_2, text_color, text
 		local tdx, tdy = 0, 8
 		local font = "cplevel"
 		if (ar_rm == "none") then	-- player not on cp
 			circle_color_1 = (get_new == "yes") and g1 or r1
 			circle_color_2 = (get_new == "yes") and g2 or r2
-			text_color_1 = 0x0050FF
+			text_color_1 = (get_new == "yes") and 0x0050FF or 0x0070FF
 			text_color_2 = 0x000040
 			tdx = 6
 			tdy = 8
@@ -3072,7 +3104,6 @@
 			WindowLine(win, x-i, y, x+1, y-(i+1), c1, 0, 1)	-- bright lines
 		end
 		WindowSetPixel (win, x, y, 0xF0F0F0)
-		-- Hotspot for resizer.
 		if (WindowHotspotInfo(win, "hsResize", 1) == nil) then
 			WindowAddHotspot(win, "hsResize", w-rts, h-rts, win_width, h, "", "", "mousedown_resize_window", "", "", "", 6, 0)
 			WindowDragHandler(win, "hsResize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
@@ -3273,10 +3304,9 @@
 			win_pos_y = WindowInfo(win, 18) -- - 7
 			local delta_x = win_pos_x - win_dragmove_start_x
 			local delta_y = win_pos_y - win_dragmove_start_y
-			--win_pos_y = WindowInfo(win, 15)
 			local max_x = GetInfo(281) - 100
 			local max_y = GetInfo(280) - 60
-			if (delta_x <= 1) then 			-- Prevents window from leaving the screen.
+			if (delta_x <= 1) then 			-- Prevents window from leaving the screen.  The bug that got me started on all this.  
 				delta_x = 1
 			elseif (delta_x >= max_x) then 	
 				delta_x = max_x
@@ -3417,12 +3447,16 @@
 		end
 	end
 
-	function gmcp(what)
-	   local ret, datastring = CallPlugin("3e7dedbe37e44942dd46d264", "gmcpdata_as_string", what)
+	function gmcp(s)
+	   local ret, datastring = CallPlugin(plugin_id_gmcp_handler, "gmcpdata_as_string", s)
 	   pcall(loadstring("data = "..datastring))
 	   return data
 	end
-	
+
+	function send_gmcp_packet(s)
+	   CallPlugin(plugin_id_gmcp_handler, "GMCP_send", s)
+	end
+		
 	function int(d)
 		if not tonumber(d) then
 			return
@@ -3466,10 +3500,6 @@
 		return str
 	end
 
-	function send_gmcp_packet(what)
-	   CallPlugin("3e7dedbe37e44942dd46d264", "GMCP_send", what)
-	end
-	
 	function spairs(t, f)
 		local tbl = {}
 		for n in pairs(t) do 
@@ -3999,7 +4029,7 @@
 			script="xrun_to"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 		
-	<alias	match="^(?:go|goto)( (?<id>[0-9]+))?$"
+	<alias	match="^(?:go|goto)( (?<index>[0-9]+))?$"
 			script="goto_number"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" keep_evaluating="y" > </alias>
 
@@ -4070,11 +4100,6 @@
 			script="room_note_area"
 			enabled="y" regexp="y" sequence="99" ignore_case="y" > </alias>
 
-<!-- Simulate cp -->		
-	<alias	match="^simulate cp(?: (?<type>ar?e?a?|ro?o?m?))?$"
-			script="simulate_cp"
-			enabled="y" regexp="y" sequence="1" ignore_case="y" > </alias>			
-			
 <!-- Sql Execution -->
 	<alias	match="^runsql (?<sql>.+)$"
 			script="RunSql"
@@ -4141,10 +4166,6 @@
 			script="do_xwhere"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 
-	<alias	match="^xtest roomhist$"
-			script="xtest_roomhist"
-			enabled="y" regexp="y" sequence="100" > </alias>	
-
 	<alias	match="^xgui ref$"
 			script="xgui_RefreshLinks"
 			enabled="y" regexp="y" sequence="100" > </alias>
@@ -4159,12 +4180,22 @@
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
 			
 <!-- xtest commands -->
-	<alias	match="^xtest mcvars$"
-			script="xtest_mcvars"
-			enabled="y" regexp="y" sequence="100" > </alias>
-			
 	<alias  match="^xtest areadata$"
 			script="xtest_areadata"
 			enabled="y" regexp="y" sequence="100" ignore_case="y" > </alias>
+
+	<alias	match="^xtest mcvars$"
+			script="xtest_mcvars"
+			enabled="y" regexp="y" sequence="100" > </alias>
+
+	<alias	match="^xtest roomhist$"
+			script="xtest_roomhist"
+			enabled="y" regexp="y" sequence="100" > </alias>	
+		
+	<alias	match="^xtest simulate cp(?: (?<type>ar?e?a?|ro?o?m?))?$"
+			script="simulate_cp"
+			enabled="y" regexp="y" sequence="1" ignore_case="y" > </alias>			
+			
+	
 </aliases>
 </muclient>
