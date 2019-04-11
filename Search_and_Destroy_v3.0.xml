@@ -908,62 +908,64 @@
 	
 	function gmkw(s, a)	-- guess mob keywords
 		if not s then return "" end
-		local ar = a or gmcp("room.info.zone") or -1
+		local ri = current_room
+		local ar = a or ri.zone
 		local guess
 		if gmkw_exceptions[ar] then			-- Is the mob listed as a keyword exception?  if so, get correct keyword(s) from the exception table instead of guessing. 
 			if gmkw_exceptions[ar][s] then
 				guess = gmkw_exceptions[ar][s].kw	-- Special thanks to Redryn for being obtuse and aggravating me enough to add this.  Dick.
+			return guess
+			end
+		end
+
+		local omit = gmkw_omit
+		local s1 = {}
+		for w in string.gmatch(string.lower(s), "[^ ]+") do
+			w = string.gsub(w, "%p%-", "")
+			w = string.gsub(w, ",", "")
+			w = string.gsub(w, "%.", "")
+			w = string.gsub(w, "'s$", "")
+			w = string.gsub(w, "[!?]+$", "")
+			table.insert(s1, w)
+		end
+
+		local s2
+		for i,v in ipairs (s1) do
+			if omit[v] then
+				-- do nothing
+			else
+				s2 = (s2 == nil) and v or s2 .. " " .. v
+			end
+		end	
+
+		local s3
+		if gmkw_area_filters[ar] then
+			for i,v in ipairs (gmkw_area_filters[ar]) do
+				s3 = string.gsub(s2, v.f, v.g)
+				if (s3 ~= s2) then
+					break
+				end
 			end
 		else
-			local omit = gmkw_omit
-			local s1 = {}
-			for w in string.gmatch(string.lower(s), "[^ ]+") do
-				w = string.gsub(w, "%p%-", "")
-				w = string.gsub(w, ",", "")
-				w = string.gsub(w, "%.", "")
-				w = string.gsub(w, "'s$", "")
-				w = string.gsub(w, "[!?]+$", "")
-				table.insert(s1, w)
-			end
-
-			local s2
-			for i,v in ipairs (s1) do
-				if omit[v] then
-					-- do nothing
-				else
-					s2 = (s2 == nil) and v or s2 .. " " .. v
-				end
-			end	
-
-			local s3
-			if gmkw_area_filters[ar] then
-				for i,v in ipairs (gmkw_area_filters[ar]) do
-					s3 = string.gsub(s2, v.f, v.g)
-					if (s3 ~= s2) then
-						break
-					end
-				end
-			else
-				s3 = s2
-			end
-			s3 = string.gsub(s3, "-", " ")
-			
-			local s4 = {}	
-			for w in string.gmatch(s3, "[^ ]+") do
-				table.insert(s4, w)
-			end
-			local len1 = #(s4[1])
-			local len2 = #(s4[#s4]) or 0
-			if (#s4 > 1) then	-- mob name has multiple words
-				local x,y = math.random(4,6), math.random(4,6)
-				guess = string.sub(s4[1], 1, x) .. " " .. string.sub(s4[#s4], 1, y)
-			elseif (#s4 == 1) then	-- mob name has one word
-				local x = math.random(1 + round_banker(len1*0.5), len1)
-				guess = string.sub(s4[1], 1, x)
-			else										-- Sometimes all of the mob words get deleted, if so just use original input.  In theory, if we reached this step
-				guess = s or "gmkw error in stage 4"  	-- then the input is non-nil and I've never seen it be "" ... so, if it errors it means Lua is propagating a nil
-			end-- somehow or doing one of the other mickey mouse nonsense things that Lua likes to do.
+			s3 = s2
 		end
+		s3 = string.gsub(s3, "-", " ")
+		
+		local s4 = {}	
+		for w in string.gmatch(s3, "[^ ]+") do
+			table.insert(s4, w)
+		end
+		local len1 = #(s4[1])
+		local len2 = #(s4[#s4]) or 0
+		if (#s4 > 1) then	-- mob name has multiple words
+			local x,y = math.random(4,6), math.random(4,6)
+			guess = string.sub(s4[1], 1, x) .. " " .. string.sub(s4[#s4], 1, y)
+		elseif (#s4 == 1) then	-- mob name has one word
+			local x = math.random(1 + round_banker(len1*0.5), len1)
+			guess = string.sub(s4[1], 1, x)
+		else										-- Sometimes all of the mob words get deleted, if so just use original input.  In theory, if we reached this step
+			guess = s or "gmkw error in stage 4"  	-- then the input is non-nil and I've never seen it be "" ... so, if it errors it means Lua is propagating a nil
+		end-- somehow or doing one of the other mickey mouse nonsense things that Lua likes to do.
 		return guess
 	end
 
@@ -4194,6 +4196,8 @@ function goto_number(name, line, wildcards)
 		
 	<alias	match="^xtest simulate cp(?: (?<type>ar?e?a?|ro?o?m?))?$"
 			script="simulate_cp"
-			enabled="y" regexp="y" sequence="1" ignore_case="y" > </alias>
+			enabled="y" regexp="y" sequence="1" ignore_case="y" > </alias>			
+			
+	
 </aliases>
 </muclient>
