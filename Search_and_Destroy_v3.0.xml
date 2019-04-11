@@ -904,7 +904,7 @@
 							{ f= "^sea (%a+ %a+)$", 					g="%1" }, }, }
 
 	local gmkw_exceptions = {
-		["necro"] 		= { ["head necromancer's assistant"] = { kw="old mage assist"}, }, }
+		["necro"] 		= { ["the head necromancer's assistant"] = { kw="old mage assist"}, }, }
 	
 	function gmkw(s, a)	-- guess mob keywords
 		if not s then return "" end
@@ -2652,6 +2652,7 @@ function goto_number(name, line, wildcards)
 		Simulate("\n")	
 		if (cp_simulate_toggle == "0") then
 			Simulate("You still have to kill * A test mob (A Cold Path)\n")	--dead
+			Simulate("You still have to kill * the head necromancer's assistant (Necromancers' Guild)\n")
 			Simulate("You still have to kill * Isscheburqua (Insanitaria)\n")
 			Simulate("You still have to kill * a rook citizen (Avian Kingdom - Dead)\n")
 			Simulate("You still have to kill * Lea, the farmer's daughter (Farmyard)\n")
@@ -4196,8 +4197,6 @@ function goto_number(name, line, wildcards)
 		
 	<alias	match="^xtest simulate cp(?: (?<type>ar?e?a?|ro?o?m?))?$"
 			script="simulate_cp"
-			enabled="y" regexp="y" sequence="1" ignore_case="y" > </alias>			
-			
-	
+			enabled="y" regexp="y" sequence="1" ignore_case="y" > </alias>
 </aliases>
 </muclient>
