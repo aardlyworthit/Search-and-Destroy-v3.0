@@ -6,7 +6,9 @@ Here is the latest update.  As with the last few, it's mainly bugfixes and simil
  - Apostrophes mid-mobname (e.g. in "gan'arg") are now removed from mob names.
  - Replaced "execute" function calls with the direct function for commands, e.g. xrun_to("", "", {destination="academy"}) instead of Execute("xrt academy").  Execute is quite slow, so calling the functions directly should improve speed/crispness a bit.
  - The mob in Necromancer's Guild "head necromancer's assistant" will always be targeted with its exact keywords "old mage assistant".  This change is the direct result of the recent shit show debate on typos board.  Some others disagree that this change is needed, but as it happens, good news: I have more control than they do—so, I say it gets changed.
- 
+
+Since taking over S&D, an increasinly common problem I encounter is that anytime I suggest changing a keyword on a mob (because the mob is missing that keyword), everyone immediately assumes I want the keyword added so that S&D's mob name guesser can handle it properly.  That is not, in fact, why I suggest adding keywords to mobs; it has nothing to do with S&D.  To demonstrate this, I added mob keyword exceptions to prove how easy it is to simply add mobs and correct keywords to the exceptions table.  It isn't necessary to report missing keywords for S&D's benefit.  From where I'm sitting, people like to use S&D as a justification to be obtuse and/or not fix anything "because challenge", so now they can complain about this instead.
+
 Keep on keeping on, ninjas.  If there are any bugs or problems with this update please let me know.  Thanks for all your support!
 
 # Search and Destroy v3.0 (rel-1.0.4) — 24 Mar 2019
